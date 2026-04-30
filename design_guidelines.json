@@ -1,0 +1,86 @@
+{
+  "theme": "light",
+  "archetype": "3 - Pastel & Soft (Neo-Brutalist Gamified Variant)",
+  "typography": {
+    "fonts": {
+      "heading": "Cabinet Grotesk",
+      "body": "Work Sans",
+      "mono": "Space Mono"
+    },
+    "scales": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight font-black uppercase",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-black",
+      "h3": "text-xl sm:text-2xl font-bold",
+      "h4": "text-lg sm:text-xl font-bold",
+      "body": "text-base leading-relaxed",
+      "labels": "text-xs tracking-[0.2em] uppercase font-bold"
+    }
+  },
+  "colors": {
+    "base": {
+      "background": "#FDFBF7",
+      "surface": "#FFFFFF",
+      "text_primary": "#0A0A0A",
+      "text_secondary": "#4A4A4A",
+      "border": "#0A0A0A"
+    },
+    "accents": {
+      "primary": "#FFE156",
+      "secondary": "#C4A1FF",
+      "tertiary": "#98F5E1",
+      "danger": "#FF6B6B",
+      "success": "#4ECDC4"
+    },
+    "gamification": {
+      "xp": "#C4A1FF",
+      "level_up": "#FFE156",
+      "badges": "#FF6B6B"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous Spacing + Blocky, visible grids",
+    "containers": "Thick 2px borders (#0A0A0A), sharp or max 8px rounded corners, solid drop shadows (e.g., shadow-[4px_4px_0px_#0A0A0A]).",
+    "bento_grid": "Used heavily for Student Dashboards (Stats, XP, Upcoming tasks) and Teacher Overviews.",
+    "padding": "p-6 to p-12 for distinct content blocks."
+  },
+  "components": {
+    "strategy": "Shadcn/UI components heavily customized for Neo-Brutalism.",
+    "buttons": "Thick borders (2px), sharp corners, solid offset shadow. On hover: translate down-right, remove shadow.",
+    "cards": "Flat surfaces (white or pastel bg), thick black borders, hard shadow.",
+    "progress_bars": "Blocky fills, high-contrast edges, no soft gradients. Thick black border wrapper.",
+    "forms": "Inputs with 2px borders, focus state rings in primary/accent colors."
+  },
+  "interactions": {
+    "hover": "Interactive elements must translate (translate-y-1 translate-x-1) and change shadow to look like physical pressing.",
+    "motion": "Use Framer Motion for XP gains, badge unlocks (spring animations, bouncing)."
+  },
+  "icons": {
+    "library": "lucide-react (default) and @phosphor-icons/react (duotone weight for gamification badges)"
+  },
+  "media": {
+    "hero_landing": {
+      "url": "https://images.unsplash.com/photo-1659356874404-934e567df530?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHw0fHwlMjJzdHVkZW50cyUyMGxlYXJuaW5nJTIwbGFwdG9wJTIwaGFwcHklMjJ8ZW58MHx8fHwxNzc3NTY0MzgzfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Happy students learning on a laptop",
+      "placement": "Landing page hero section"
+    },
+    "gamification_badge_gold_star": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/2a1f8c92-26d8-4e5a-9d11-5c472236d50d/images/53cd42293434c503a623752ed1619536219a9a0d9912d482d60132da2dc8cd49.png",
+      "description": "3D Gold Star Badge",
+      "placement": "Student dashboard achievements and level up modals"
+    },
+    "gamification_reward_chest": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/2a1f8c92-26d8-4e5a-9d11-5c472236d50d/images/6379ef9baa4d593a82d54adaffd209b1620515d9c9843417b84914b7a6e52810.png",
+      "description": "3D Reward Chest",
+      "placement": "Rewards store or milestone completion screen"
+    }
+  },
+  "instructions_to_main_agent": [
+    "CRITICAL: All interactive and key informational elements MUST include `data-testid` attribute.",
+    "Do NOT use 'Inter', 'Roboto', or generic fonts for headings. Use 'Cabinet Grotesk'.",
+    "Apply Neo-Brutalist styles to Shadcn components: remove soft shadows, add 2px black borders (`border-2 border-black`), and hard drop shadows (`shadow-[4px_4px_0_0_#000000]`).",
+    "Never use generic full-screen gradients. Use solid pastels or white with thick borders.",
+    "Implement gamification effectively: high-contrast progress bars, prominent XP stats, and oversized typography for rankings.",
+    "Student dashboard must emphasize \"Upcoming Activities\" and \"Gamification (XP/Badges/Leaderboard)\".",
+    "Teacher dashboard must emphasize \"Quick Course Actions\", \"Activity Submissions to Grade\", and \"Course Stats\"."
+  ]
+}

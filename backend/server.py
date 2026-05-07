@@ -439,15 +439,20 @@ async def get_activity(activity_id: str, user: dict = Depends(get_current_user))
     a = await db.activities.find_one({"id": activity_id}, {"_id": 0})
     if not a:
         raise HTTPException(status_code=404, detail="Not found")
-    if user["role"] == "student" and a.get("quiz_questions"):
-        a["quiz_questions"] = [
-            {"question": q["question"], "options": q["options"]}
-            for q in a["quiz_questions"]
-        ]
+    if user["role"] == "student":
         sub = await db.submissions.find_one(
             {"activity_id": activity_id, "student_id": user["id"]}, {"_id": 0}
         )
         a["my_submission"] = sub
+        if a.get("quiz_questions"):
+            # If student already submitted, reveal correct answers (for review screen)
+            if sub:
+                pass  # keep correct_index visible
+            else:
+                a["quiz_questions"] = [
+                    {"question": q["question"], "options": q["options"]}
+                    for q in a["quiz_questions"]
+                ]
     return a
 
 @api.delete("/activities/{activity_id}")
@@ -626,6 +631,35 @@ async def my_stats(user: dict = Depends(get_current_user)):
         "submissions_count": submissions_count,
     }
 
+@api.get("/me/upcoming")
+async def upcoming_activities(user: dict = Depends(get_current_user)):
+    """Return upcoming activities for student's enrolled courses with due dates in the future or no submission yet."""
+    enrolls = await db.enrollments.find({"student_id": user["id"]}, {"_id": 0}).to_list(500)
+    course_ids = [e["course_id"] for e in enrolls]
+    if not course_ids:
+        return []
+    activities = await db.activities.find({"course_id": {"$in": course_ids}}, {"_id": 0}).to_list(500)
+    # attach submission state + course title
+    result = []
+    for a in activities:
+        sub = await db.submissions.find_one({"activity_id": a["id"], "student_id": user["id"]}, {"_id": 0})
+        if sub:
+            continue  # skip already-submitted
+        course = await db.courses.find_one({"id": a["course_id"]}, {"_id": 0})
+        result.append({
+            "id": a["id"],
+            "title": a["title"],
+            "type": a["type"],
+            "due_date": a.get("due_date"),
+            "xp_reward": a.get("xp_reward", 50),
+            "course_id": a["course_id"],
+            "course_title": course["title"] if course else "",
+            "course_color": course.get("cover_color", "#8BC34A") if course else "#8BC34A",
+        })
+    # sort by due_date asc, nulls last
+    result.sort(key=lambda x: (x.get("due_date") is None, x.get("due_date") or ""))
+    return result[:10]
+
 @api.get("/leaderboard")
 async def leaderboard(user: dict = Depends(get_current_user)):
     users = await db.users.find({"role": "student"}, {"_id": 0, "password_hash": 0}).sort("xp", -1).limit(50).to_list(50)
@@ -644,6 +678,81 @@ async def leaderboard(user: dict = Depends(get_current_user)):
         })
     return result
 
+async def seed_sample_course(db, teacher_id: str):
+    """Seed a demo course about medicinal plants if none exists."""
+    existing = await db.courses.find_one({"teacher_id": teacher_id, "title": "Plantas Medicinales 101"})
+    if existing:
+        return
+    course_id = str(uuid.uuid4())
+    await db.courses.insert_one({
+        "id": course_id,
+        "title": "Plantas Medicinales 101",
+        "description": "Introducción al mundo de las plantas medicinales, sus principios activos y aplicaciones terapéuticas tradicionales.",
+        "subject": "Botánica",
+        "cover_color": "#8BC34A",
+        "teacher_id": teacher_id,
+        "teacher_name": "NUMA",
+        "created_at": now_iso(),
+    })
+    lessons = [
+        {"title": "¿Qué son las plantas medicinales?",
+         "content": "# Bienvenido a NUMA\n\nLas **plantas medicinales** son aquellas que contienen principios activos con efectos terapéuticos sobre el organismo.\n\n## Ejemplos clásicos\n\n- **Manzanilla** (*Matricaria chamomilla*): digestiva y relajante\n- **Tilo** (*Tilia platyphyllos*): ansiolítico suave\n- **Equinácea** (*Echinacea purpurea*): inmunoestimulante\n- **Caléndula** (*Calendula officinalis*): cicatrizante tópica\n\n> El uso de hierbas con fines medicinales se remonta a más de 60.000 años.",
+         "order": 1},
+        {"title": "Principios activos y modos de extracción",
+         "content": "## Principios activos comunes\n\n1. **Alcaloides** — efectos potentes sobre SNC (ej. cafeína)\n2. **Flavonoides** — antioxidantes (ej. quercetina)\n3. **Aceites esenciales** — aromáticos y antimicrobianos\n4. **Taninos** — astringentes (ej. corteza de roble)\n\n## Métodos de preparación\n\n- **Infusión**: hojas y flores en agua caliente sin hervir\n- **Decocción**: raíces y cortezas hervidas 10-15 min\n- **Tintura**: maceración en alcohol 30-40°\n- **Cataplasma**: aplicación tópica de planta machacada",
+         "order": 2},
+        {"title": "Buenas prácticas y precauciones",
+         "content": "## Antes de usar cualquier planta\n\n- **Consulta** a un profesional de salud si tomas medicamentos\n- Verifica **identificación botánica** correcta\n- Empieza con **dosis bajas** para detectar alergias\n- Embarazadas y niños requieren **atención especial**\n\n## Plantas con interacciones conocidas\n\n| Planta | Interacción |\n|--------|-------------|\n| Hierba de San Juan | Antidepresivos, anticonceptivos |\n| Ginkgo | Anticoagulantes |\n| Regaliz | Hipertensión |",
+         "order": 3},
+    ]
+    for l in lessons:
+        await db.lessons.insert_one({"id": str(uuid.uuid4()), "course_id": course_id, **l, "created_at": now_iso()})
+    resources = [
+        {"title": "Atlas de plantas medicinales (OMS)", "type": "link",
+         "url": "https://www.who.int/medicines/areas/traditional/en/", "description": "Monografías oficiales de la OMS"},
+        {"title": "Guía visual de hojas y flores", "type": "link",
+         "url": "https://es.wikipedia.org/wiki/Planta_medicinal", "description": "Referencia general en Wikipedia"},
+    ]
+    for r in resources:
+        await db.resources.insert_one({"id": str(uuid.uuid4()), "course_id": course_id, **r,
+                                        "url": r.get("url"), "file_id": None,
+                                        "created_at": now_iso()})
+    # Quiz activity
+    await db.activities.insert_one({
+        "id": str(uuid.uuid4()),
+        "course_id": course_id,
+        "title": "Quiz: Conoce tus hierbas",
+        "description": "Pon a prueba lo aprendido sobre plantas medicinales básicas.",
+        "type": "quiz",
+        "due_date": None,
+        "max_points": 100,
+        "xp_reward": 80,
+        "quiz_questions": [
+            {"question": "¿Qué planta es conocida por su efecto digestivo y relajante?",
+             "options": ["Equinácea", "Manzanilla", "Caléndula", "Romero"], "correct_index": 1},
+            {"question": "¿Qué método se usa típicamente para extraer principios activos de raíces y cortezas?",
+             "options": ["Infusión", "Tintura", "Decocción", "Cataplasma"], "correct_index": 2},
+            {"question": "¿Qué tipo de principio activo es la cafeína?",
+             "options": ["Flavonoide", "Tanino", "Aceite esencial", "Alcaloide"], "correct_index": 3},
+            {"question": "¿Qué planta puede interactuar con anticoagulantes?",
+             "options": ["Tilo", "Ginkgo", "Manzanilla", "Caléndula"], "correct_index": 1},
+        ],
+        "created_at": now_iso(),
+    })
+    # Assignment activity
+    await db.activities.insert_one({
+        "id": str(uuid.uuid4()),
+        "course_id": course_id,
+        "title": "Tarea: Mi botiquín verde",
+        "description": "Investiga y describe 3 plantas medicinales que crezcan en tu región. Para cada una indica: nombre común y científico, principal uso terapéutico, y forma de preparación recomendada. Adjunta una foto si puedes.",
+        "type": "assignment",
+        "due_date": None,
+        "max_points": 100,
+        "xp_reward": 120,
+        "quiz_questions": None,
+        "created_at": now_iso(),
+    })
+
 # ---------- Startup ----------
 @app.on_event("startup")
 async def startup():
@@ -657,16 +766,19 @@ async def startup():
     admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
     existing = await db.users.find_one({"email": admin_email})
     if not existing:
+        admin_id = str(uuid.uuid4())
         await db.users.insert_one({
-            "id": str(uuid.uuid4()),
+            "id": admin_id,
             "email": admin_email,
-            "name": "Admin",
+            "name": "NUMA",
             "password_hash": hash_password(admin_password),
             "role": "teacher",
-            "xp": 0, "level": 1, "avatar_color": "#C4A1FF",
+            "xp": 0, "level": 1, "avatar_color": "#8BC34A",
             "created_at": now_iso(),
         })
-    logger.info("EduQuest startup complete")
+        existing = {"id": admin_id}
+    await seed_sample_course(db, existing["id"])
+    logger.info("NUMA startup complete")
 
 @app.on_event("shutdown")
 async def shutdown():

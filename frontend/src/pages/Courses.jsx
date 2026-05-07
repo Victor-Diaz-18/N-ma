@@ -7,7 +7,7 @@ import { NBCard, NBButton, NBBadge, NBInput, NBTextarea } from "../components/nb
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
-const COLORS = ["#8BC34A", "#A5D6A7", "#C5E1A5", "#FF6B6B", "#2E8B7F", "#6B8E23"];
+const COLORS = ["#8BC34A", "#A5D6A7", "#C5E1A5", "#2E8B7F", "#E0E879", "#FFD0CD"];
 
 export function Courses() {
   const { user } = useAuth();

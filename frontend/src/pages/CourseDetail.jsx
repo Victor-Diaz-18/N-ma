@@ -4,6 +4,7 @@ import { api, API } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge } from "../components/nb";
+import ReactMarkdown from "react-markdown";
 import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,7 +50,7 @@ export default function CourseDetail() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6" data-testid="course-detail">
         {/* Header */}
         <NBCard className="overflow-hidden">
-          <div className="h-32 border-b-2 border-black flex items-end p-6" style={{ background: course.cover_color || "#8BC34A" }}>
+          <div className="h-32 border-b-2 border-[#1F5A2A] flex items-end p-6" style={{ background: course.cover_color || "#8BC34A" }}>
             <div>
               <NBBadge>{course.subject}</NBBadge>
               <h1 className="font-display font-black text-4xl sm:text-5xl uppercase mt-2 leading-[0.95]">{course.title}</h1>
@@ -91,8 +92,10 @@ export default function CourseDetail() {
             {lessons.length === 0 ? <Empty text="Aún no hay lecciones." /> :
               lessons.map((l) => (
                 <NBCard key={l.id} className="p-5" data-testid={`lesson-${l.id}`}>
-                  <div className="font-display font-black text-xl">{l.title}</div>
-                  <div className="mt-2 prose prose-sm max-w-none whitespace-pre-wrap">{l.content}</div>
+                  <div className="font-display font-black text-xl text-[#1F5A2A]">{l.title}</div>
+                  <div className="mt-2 prose prose-sm max-w-none prose-headings:font-display prose-headings:text-[#1F5A2A] prose-strong:text-[#1F5A2A] prose-a:text-[#2E8B7F]">
+                    <ReactMarkdown>{l.content}</ReactMarkdown>
+                  </div>
                 </NBCard>
               ))}
           </div>

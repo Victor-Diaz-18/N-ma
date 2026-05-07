@@ -4,7 +4,7 @@ import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBProgress } from "../components/nb";
-import { BookOpen, Trophy, ClipboardList, Zap, Plus, FileCheck2, Award } from "lucide-react";
+import { BookOpen, Trophy, ClipboardList, Zap, Plus, FileCheck2, Award, CalendarClock } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -17,15 +17,17 @@ function StudentDashboard() {
   const [stats, setStats] = useState(null);
   const [courses, setCourses] = useState([]);
   const [submissions, setSubmissions] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
 
   useEffect(() => {
     (async () => {
-      const [s, c, subs] = await Promise.all([
+      const [s, c, subs, up] = await Promise.all([
         api.get("/me/stats"),
         api.get("/courses/mine"),
         api.get("/me/submissions"),
+        api.get("/me/upcoming"),
       ]);
-      setStats(s.data); setCourses(c.data); setSubmissions(subs.data);
+      setStats(s.data); setCourses(c.data); setSubmissions(subs.data); setUpcoming(up.data);
     })();
   }, []);
 
@@ -83,6 +85,44 @@ function StudentDashboard() {
             <Link to="/leaderboard"><NBButton className="w-full mt-2" variant="dark" data-testid="dash-leaderboard-btn">Ver ranking</NBButton></Link>
           </NBCard>
         </div>
+
+        {/* Upcoming activities */}
+        <section>
+          <h2 className="font-display font-black text-2xl uppercase text-[#1F5A2A] mb-4 flex items-center gap-2">
+            <CalendarClock className="w-6 h-6" /> Próximas actividades
+          </h2>
+          {upcoming.length === 0 ? (
+            <NBCard className="p-6 text-sm text-[#3E5A3E]">No tienes actividades pendientes. ¡Buen trabajo!</NBCard>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {upcoming.map((u) => (
+                <Link key={u.id} to={`/activities/${u.id}`} className="block nb-press" data-testid={`upcoming-${u.id}`}>
+                  <NBCard className="p-4 flex items-start gap-3">
+                    <div className="w-12 h-12 nb-border flex flex-col items-center justify-center font-display font-black flex-shrink-0" style={{ background: u.course_color || "#8BC34A" }}>
+                      {u.due_date ? (
+                        <>
+                          <span className="text-[0.6rem] leading-none">{new Date(u.due_date).toLocaleDateString("es-ES", { month: "short" }).toUpperCase()}</span>
+                          <span className="text-lg leading-none">{new Date(u.due_date).getDate()}</span>
+                        </>
+                      ) : (
+                        <CalendarClock className="w-6 h-6" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex gap-1 flex-wrap">
+                        <NBBadge color={u.type === "quiz" ? "#A5D6A7" : "#C5E1A5"}>{u.type === "quiz" ? "quiz" : "tarea"}</NBBadge>
+                        <NBBadge color="#8BC34A">{u.xp_reward} XP</NBBadge>
+                      </div>
+                      <div className="font-display font-black mt-1 truncate">{u.title}</div>
+                      <div className="text-xs text-[#3E5A3E] truncate">{u.course_title}</div>
+                      {u.due_date && <div className="text-xs font-mono mt-0.5">Vence {new Date(u.due_date).toLocaleDateString("es-ES")}</div>}
+                    </div>
+                  </NBCard>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* My courses */}
         <section>
@@ -225,7 +265,7 @@ function CourseCard({ c, manage }) {
   return (
     <Link to={manage ? `/courses/${c.id}/manage` : `/courses/${c.id}`} className="block nb-press" data-testid={`course-card-${c.id}`}>
       <NBCard className="overflow-hidden">
-        <div className="h-24 border-b-2 border-black flex items-end p-4" style={{ background: c.cover_color || "#8BC34A" }}>
+        <div className="h-24 border-b-2 border-[#1F5A2A] flex items-end p-4" style={{ background: c.cover_color || "#8BC34A" }}>
           <span className="label-caps">{c.subject}</span>
         </div>
         <div className="p-4">

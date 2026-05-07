@@ -180,7 +180,7 @@ function Feature({ icon, title, body, color }) {
 function Step({ n, children }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="font-mono font-bold bg-black text-white px-2 py-0.5 text-xs">{n}</span>
+      <span className="font-mono font-bold bg-[#1F5A2A] text-white px-2 py-0.5 text-xs">{n}</span>
       <span>{children}</span>
     </li>
   );

@@ -1,0 +1,42 @@
+{
+  "summary": "Tested NUMA backend new endpoints (/api/me/upcoming, updated /api/activities/{id}), the seeded sample course 'Plantas Medicinales 101', the [1,2,3,1] quiz scoring (=>100%), and ran regression checks on previously-passing endpoints. 15/16 tests pass. The only failure is the localized-BADGES requirement: the BADGES list in server.py is still in ENGLISH ('First Steps', 'Quiz Master', 'Scholar', 'Trailblazer', 'Rising Star', 'Polymath') instead of the Spanish names called for in the review spec ('Primeros Pasos', 'Maestro del Quiz', 'Erudito', etc.). All other new behavior works exactly as specified.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/me/stats (BADGES list)", "issue": "Badges are not localized. server.py BADGES list still uses English names (First Steps, Trailblazer, Quiz Master, Rising Star, Scholar, Polymath). Review request requires Spanish: 'Primeros Pasos' (first_enroll), 'Maestro del Quiz' (quiz_master), 'Erudito' (scholar/level_10), and Spanish equivalents for the rest + Spanish descriptions.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/activities/{id}/submit-quiz & /submit-assignment", "issue": "Pydantic schemas QuizSubmissionIn / SubmissionFileIn redundantly require activity_id in body even though it is already in the path. Easy to misuse; consider dropping it from the body or ignoring it server-side. Tests must send both."},
+      {"endpoint": "GET /api/me/upcoming", "issue": "Does not filter out past-due activities (only filters out submitted ones). A past-due activity with no submission still appears as 'upcoming'. Spec wording 'upcoming' may imply due_date >= now."},
+      {"endpoint": "GET /api/me/upcoming", "issue": "N+1 queries: one find_one per activity for submission and another for course. Fine at small scale but can be batched with $lookup or in-memory join."},
+      {"endpoint": "Carryover from iter_1: GET /api/files/{file_id}", "issue": "Still publicly downloadable by id (no auth dependency). Not retested but unchanged."},
+      {"endpoint": "Carryover from iter_1: CORS_ORIGINS='*' with allow_credentials=True", "issue": "Still invalid for credentialed browser requests. Unchanged."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_numa_new_endpoints.py",
+    "/app/backend/tests/test_eduquest_api.py",
+    "/app/test_reports/pytest/numa_new_endpoints.xml"
+  ],
+  "action_items": [
+    "Localize BADGES in /app/backend/server.py to Spanish — at minimum: first_enroll -> 'Primeros Pasos', quiz_master -> 'Maestro del Quiz', level_10 -> 'Erudito'. Translate the remaining 3 (first_submission, level_5, three_courses) and their descriptions too for consistency with NUMA Spanish UI.",
+    "Optional: drop activity_id from QuizSubmissionIn / SubmissionFileIn body since it's already a path param (or fall back to path).",
+    "Optional: filter /api/me/upcoming to also exclude activities whose due_date has already passed."
+  ],
+  "critical_code_review_comments": [
+    "BADGES strings are hardcoded English in backend; for an i18n-friendly app these should live in a localization map keyed by id, or the backend should return only ids and let the frontend localize. Mixing English badge names with the Spanish UI is a UX regression.",
+    "submit-quiz/submit-assignment Pydantic models duplicate activity_id from the path — invites bugs if they ever disagree. Validate or drop.",
+    "/api/me/upcoming sort key tuple uses '' for missing dates; works correctly in practice but is less explicit than separating null vs non-null lists then concatenating.",
+    "seed_sample_course relies on title-uniqueness per teacher to detect existence. If admin email changes the demo will be re-seeded under a new teacher_id, leaving the old course orphaned."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_numa_new_endpoints.py"
+  ],
+  "success_rate": {"backend": "94% (15/16)", "frontend": "not tested"},
+  "test_credentials": "admin@eduquest.com / admin123 (seeded teacher). Test student created at runtime: test_numa_stu_<uuid>@example.com / Secret123!",
+  "seed_data_creation": "The startup seeder creates 'Plantas Medicinales 101' (3 lessons, 2 link resources, 1 quiz with 4 questions, 1 assignment). Verified present and structurally correct. Test run also creates 3 extra dated activities under that course to verify due_date sorting; they are deleted in test_99_cleanup.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Re-run /app/backend/tests/test_numa_new_endpoints.py after main agent translates BADGES. The Spanish-name assertion (test_11) is the only failing test. All other new behavior — /me/upcoming filtering+sorting+course meta, quiz correct_index hiding-then-revealing, [1,2,3,1] => 100% scoring, seed integrity — works as specified. Previous regression suite at /app/backend/tests/test_eduquest_api.py was not re-run this iteration; spot-checks via the new file confirm courses/auth/leaderboard/stats/submissions/grading still work.",
+  "rca of the issue": "BADGES localization gap: in /app/backend/server.py around line 101-108, the BADGES list still contains English 'name' and 'description' values from the EduQuest era. The rebrand to NUMA (Spanish UI) was done elsewhere but this list was not translated. Fix is a straightforward dict edit; no logic change needed. Reproduction: GET /api/me/stats with any user, inspect badges[].name — all are English."
+}

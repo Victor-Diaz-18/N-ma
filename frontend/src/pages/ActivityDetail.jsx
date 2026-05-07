@@ -4,7 +4,7 @@ import { api, API } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBTextarea } from "../components/nb";
-import { Upload, Check, ArrowLeft } from "lucide-react";
+import { Upload, Check, ArrowLeft, X } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ActivityDetail() {
@@ -85,6 +85,44 @@ export default function ActivityDetail() {
                 {result.type === "assignment" && <div className="font-mono text-sm">Estado: {result.status === "graded" ? "calificado" : "enviado"}{result.score != null ? ` · ${result.score}/${a.max_points}` : ""}</div>}
                 {result.feedback && <div className="text-sm mt-1">Retroalimentación: {result.feedback}</div>}
               </div>
+            </div>
+          </NBCard>
+        )}
+
+        {result && result.type === "quiz" && a.quiz_questions?.[0]?.correct_index !== undefined && (
+          <NBCard className="p-5" data-testid="quiz-review">
+            <h2 className="font-display font-black text-xl uppercase mb-3 text-[#1F5A2A]">Revisión del quiz</h2>
+            <div className="space-y-3">
+              {a.quiz_questions.map((q, i) => {
+                const myAns = result.answers?.[i];
+                const correct = q.correct_index;
+                const ok = myAns === correct;
+                return (
+                  <div key={i} className="nb-border p-3 bg-white" data-testid={`review-q-${i}`}>
+                    <div className="flex items-start gap-2 mb-2">
+                      {ok ? <Check className="w-5 h-5 text-[#2E8B7F] mt-0.5" strokeWidth={3} />
+                          : <X className="w-5 h-5 text-[#FF6B6B] mt-0.5" strokeWidth={3} />}
+                      <div className="font-bold flex-1">{i + 1}. {q.question}</div>
+                    </div>
+                    <div className="space-y-1.5 ml-7">
+                      {q.options.map((o, j) => {
+                        const isCorrect = j === correct;
+                        const wasPicked = j === myAns;
+                        let cls = "p-2 nb-border bg-white";
+                        if (isCorrect) cls = "p-2 nb-border bg-[#C5E1A5] font-bold";
+                        else if (wasPicked && !isCorrect) cls = "p-2 nb-border bg-[#FFD0CD]";
+                        return (
+                          <div key={j} className={cls}>
+                            <span>{o}</span>
+                            {isCorrect && <span className="label-caps ml-2 text-[#2E8B7F]">· correcta</span>}
+                            {wasPicked && !isCorrect && <span className="label-caps ml-2 text-[#FF6B6B]">· tu respuesta</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </NBCard>
         )}

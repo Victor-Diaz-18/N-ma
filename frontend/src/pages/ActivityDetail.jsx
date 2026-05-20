@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { api, API } from "../lib/api";
+import { api, API, submitWithQueue } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBTextarea } from "../components/nb";
-import { Upload, Check, ArrowLeft, X } from "lucide-react";
+import { Upload, Check, ArrowLeft, X, CloudOff } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ActivityDetail() {
@@ -30,6 +30,9 @@ export default function ActivityDetail() {
     e.preventDefault();
     let file_id = null;
     if (file) {
+      if (!navigator.onLine) {
+        return toast.error("No puedes adjuntar archivos sin conexión. Envía solo texto o reintenta con internet.");
+      }
       setUploading(true);
       const fd = new FormData(); fd.append("file", file);
       try {
@@ -39,10 +42,16 @@ export default function ActivityDetail() {
       setUploading(false);
     }
     try {
-      const { data } = await api.post(`/activities/${id}/submit-assignment`, { activity_id: id, file_id, text_response: text });
-      toast.success("¡Enviado! Esperando calificación.");
-      setResult(data);
-      load();
+      const { data, queued } = await submitWithQueue(`/activities/${id}/submit-assignment`,
+        { activity_id: id, file_id, text_response: text }, "assignment");
+      if (queued) {
+        toast.success("Guardado sin conexión — se sincronizará automáticamente.");
+        setResult({ type: "assignment", status: "submitted", _queued: true, text_response: text, file_id });
+      } else {
+        toast.success("¡Enviado! Esperando calificación.");
+        setResult(data);
+        load();
+      }
     } catch (e) { toast.error(e.response?.data?.detail || "Error"); }
   };
 
@@ -50,10 +59,16 @@ export default function ActivityDetail() {
     e.preventDefault();
     if (answers.some(x => x < 0)) return toast.error("Responde todas las preguntas");
     try {
-      const { data } = await api.post(`/activities/${id}/submit-quiz`, { activity_id: id, answers });
-      toast.success(`¡${data.percent}% de aciertos! +${data.xp_awarded} XP`);
-      setResult(data);
-      await refreshUser();
+      const { data, queued } = await submitWithQueue(`/activities/${id}/submit-quiz`,
+        { activity_id: id, answers }, "quiz");
+      if (queued) {
+        toast.success("Quiz guardado sin conexión — se enviará y calificará al recuperar internet.");
+        setResult({ type: "quiz", status: "submitted", _queued: true, answers });
+      } else {
+        toast.success(`¡${data.percent}% de aciertos! +${data.xp_awarded} XP`);
+        setResult(data);
+        await refreshUser();
+      }
     } catch (e) { toast.error(e.response?.data?.detail || "Error"); }
   };
 
@@ -78,11 +93,12 @@ export default function ActivityDetail() {
         {result && (
           <NBCard color="teal" className="p-5" data-testid="activity-result">
             <div className="flex items-center gap-3">
-              <Check className="w-7 h-7" strokeWidth={3} />
+              {result._queued ? <CloudOff className="w-7 h-7" strokeWidth={3} /> : <Check className="w-7 h-7" strokeWidth={3} />}
               <div>
-                <div className="font-display font-black text-xl">Entregado</div>
-                {result.type === "quiz" && <div className="font-mono text-sm">Puntaje: {result.correct_count}/{result.total_count} ({result.percent}%) · +{result.xp_awarded || 0} XP</div>}
-                {result.type === "assignment" && <div className="font-mono text-sm">Estado: {result.status === "graded" ? "calificado" : "enviado"}{result.score != null ? ` · ${result.score}/${a.max_points}` : ""}</div>}
+                <div className="font-display font-black text-xl">{result._queued ? "Guardado sin conexión" : "Entregado"}</div>
+                {result._queued && <div className="text-sm">Se enviará automáticamente cuando recuperes internet.</div>}
+                {!result._queued && result.type === "quiz" && <div className="font-mono text-sm">Puntaje: {result.correct_count}/{result.total_count} ({result.percent}%) · +{result.xp_awarded || 0} XP</div>}
+                {!result._queued && result.type === "assignment" && <div className="font-mono text-sm">Estado: {result.status === "graded" ? "calificado" : "enviado"}{result.score != null ? ` · ${result.score}/${a.max_points}` : ""}</div>}
                 {result.feedback && <div className="text-sm mt-1">Retroalimentación: {result.feedback}</div>}
               </div>
             </div>

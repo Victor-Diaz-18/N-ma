@@ -5,8 +5,9 @@ import { useAuth } from "../lib/auth";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge } from "../components/nb";
 import ReactMarkdown from "react-markdown";
-import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, Pencil } from "lucide-react";
+import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, Pencil, Download, HardDriveDownload, Check } from "lucide-react";
 import { toast } from "sonner";
+import { markCourseOffline, isCourseOffline, markFileOffline, isFileOffline, precacheFile } from "../lib/offline";
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -17,6 +18,9 @@ export default function CourseDetail() {
   const [lessons, setLessons] = useState([]);
   const [resources, setResources] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [offline, setOffline] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [offlineFiles, setOfflineFiles] = useState({});
 
   const load = async () => {
     const { data: c } = await api.get(`/courses/${id}`);
@@ -27,8 +31,47 @@ export default function CourseDetail() {
       api.get(`/courses/${id}/activities`),
     ]);
     setLessons(ls.data); setResources(rs.data); setActivities(as.data);
+    setOffline(await isCourseOffline(id));
+    const fmap = {};
+    for (const r of rs.data) {
+      if (r.type === "file" && r.file_id) fmap[r.file_id] = await isFileOffline(r.file_id);
+    }
+    setOfflineFiles(fmap);
   };
   useEffect(() => { load(); }, [id]);
+
+  const downloadCourseOffline = async () => {
+    setDownloading(true);
+    try {
+      // Pre-cache lessons + resources + activities (already cached by api interceptor)
+      // Pre-cache file resources via service worker
+      for (const r of resources) {
+        if (r.type === "file" && r.file_id) {
+          const url = `${API}/files/${r.file_id}`;
+          precacheFile(url);
+          await markFileOffline(r.file_id, { title: r.title, course_id: id });
+        }
+      }
+      await markCourseOffline(id, { title: course.title, subject: course.subject });
+      setOffline(true);
+      const fmap = { ...offlineFiles };
+      for (const r of resources) if (r.type === "file" && r.file_id) fmap[r.file_id] = true;
+      setOfflineFiles(fmap);
+      toast.success("Curso disponible sin conexión");
+    } catch (e) {
+      toast.error("No se pudo descargar el curso");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const downloadResource = async (r) => {
+    if (r.type !== "file" || !r.file_id) return;
+    precacheFile(`${API}/files/${r.file_id}`);
+    await markFileOffline(r.file_id, { title: r.title, course_id: id });
+    setOfflineFiles({ ...offlineFiles, [r.file_id]: true });
+    toast.success(`"${r.title}" guardado sin conexión`);
+  };
 
   const enroll = async () => {
     await api.post(`/courses/${id}/enroll`);
@@ -61,7 +104,7 @@ export default function CourseDetail() {
               <p className="text-[#3E5A3E]">{course.description}</p>
               <div className="label-caps mt-3">Por {course.teacher_name} · {course.student_count} estudiantes</div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {course.is_owner && (
                 <Link to={`/courses/${id}/manage`}>
                   <NBButton variant="dark" data-testid="course-manage-btn"><Pencil className="inline w-4 h-4 mr-1" /> Administrar</NBButton>
@@ -71,6 +114,15 @@ export default function CourseDetail() {
                 <NBButton variant="primary" onClick={enroll} data-testid="course-enroll-btn">Inscribirse <ArrowRight className="inline w-4 h-4 ml-1" /></NBButton>
               )}
               {course.is_enrolled && <NBBadge color="#2E8B7F">Inscrito</NBBadge>}
+              {course.is_enrolled && (
+                offline ? (
+                  <NBBadge color="#A5D6A7" className="flex items-center gap-1"><Check className="w-3 h-3" /> Offline listo</NBBadge>
+                ) : (
+                  <NBButton variant="teal" onClick={downloadCourseOffline} disabled={downloading} data-testid="course-download-offline-btn">
+                    <HardDriveDownload className="inline w-4 h-4 mr-1" /> {downloading ? "Descargando..." : "Descargar para offline"}
+                  </NBButton>
+                )
+              )}
             </div>
           </div>
         </NBCard>
@@ -105,19 +157,29 @@ export default function CourseDetail() {
           <div className="grid sm:grid-cols-2 gap-3">
             {resources.length === 0 ? <Empty text="Aún no hay recursos." /> :
               resources.map((r) => (
-                <a key={r.id} href={r.type === "link" ? r.url : `${API}/files/${r.file_id}`} target="_blank" rel="noopener noreferrer"
-                   className="nb-press block" data-testid={`resource-${r.id}`}>
-                  <NBCard className="p-4 flex items-start gap-3">
-                    <div className="w-10 h-10 nb-border flex items-center justify-center" style={{ background: r.type === "link" ? "#A5D6A7" : "#C5E1A5" }}>
-                      {r.type === "link" ? <LinkIcon className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-bold">{r.title}</div>
+                <NBCard key={r.id} className="p-4 flex items-start gap-3" data-testid={`resource-${r.id}`}>
+                  <div className="w-10 h-10 nb-border flex items-center justify-center flex-shrink-0" style={{ background: r.type === "link" ? "#A5D6A7" : "#C5E1A5" }}>
+                    {r.type === "link" ? <LinkIcon className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <a href={r.type === "link" ? r.url : `${API}/files/${r.file_id}`} target="_blank" rel="noopener noreferrer" className="block">
+                      <div className="font-bold truncate">{r.title}</div>
                       {r.description && <div className="text-sm text-[#3E5A3E]">{r.description}</div>}
-                      <NBBadge color={r.type === "link" ? "#A5D6A7" : "#C5E1A5"} className="mt-1">{r.type === "link" ? "enlace" : "archivo"}</NBBadge>
+                    </a>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <NBBadge color={r.type === "link" ? "#A5D6A7" : "#C5E1A5"}>{r.type === "link" ? "enlace" : "archivo"}</NBBadge>
+                      {r.type === "file" && r.file_id && (
+                        offlineFiles[r.file_id] ? (
+                          <NBBadge color="#8BC34A" className="flex items-center gap-1"><Check className="w-3 h-3" /> Offline</NBBadge>
+                        ) : (
+                          <button onClick={() => downloadResource(r)} className="label-caps underline" data-testid={`resource-download-${r.id}`}>
+                            <Download className="w-3 h-3 inline" /> Guardar offline
+                          </button>
+                        )
+                      )}
                     </div>
-                  </NBCard>
-                </a>
+                  </div>
+                </NBCard>
               ))}
           </div>
         )}

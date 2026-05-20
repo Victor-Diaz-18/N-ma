@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import OfflineIndicator from "./OfflineIndicator";
 import { LogOut, Trophy, User, LayoutDashboard, BookOpen } from "lucide-react";
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_courseforge-69/artifacts/fi0qofox_e5ed343a-cd69-4fa8-8147-0cc3ec580460.jpeg";
@@ -40,6 +41,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <OfflineIndicator />
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[#A5D6A7] nb-border">
             <span className="font-mono text-xs font-bold" data-testid="nav-xp">{user.xp} XP</span>
             <span className="w-px h-4 bg-[#1F5A2A]" />

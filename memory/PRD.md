@@ -50,6 +50,15 @@ Educational platform where teachers create their own courses, upload resources, 
 - **Sample course seeded on startup**: "Plantas Medicinales 101" with 3 markdown lessons (qué son, principios activos, buenas prácticas), 2 link resources, 1 quiz (4 Qs about manzanilla, decocción, alcaloides, ginkgo), 1 assignment ("Mi botiquín verde").
 - **Visual cleanup**: replaced all `border-black`/`bg-black` references with `#1F5A2A` for full palette coherence; course cover color picker now uses on-brand greens.
 
+## PWA + Offline Support (May 2026)
+- **Installable PWA** on Android/iOS/desktop: full `manifest.json` (NUMA name, green theme #1F5A2A, cream bg #F5F1E4, standalone display, portrait orientation, logo as 192/512 icon).
+- **Custom Service Worker** (`public/sw.js`): app shell cache-first, API responses network-first with IndexedDB fallback, file resources cache-first with `PRECACHE_FILE` message support.
+- **IndexedDB store** (`src/lib/offline.js`) via `idb`: 5 stores — `kv`, `api_cache`, `pending_submissions`, `offline_files`, `downloaded_courses`.
+- **Auto-sync queue** (`src/lib/sync.js`): submissions made while offline are queued in IndexedDB and auto-replayed when `online` event fires + periodic 60s retry. Shows toast "X entregas sincronizadas".
+- **Online/Offline indicator** in Navbar: green "EN LÍNEA" / red "SIN CONEXIÓN" / yellow "X POR SINCR." with manual sync trigger.
+- **"Descargar para offline"** button on each course (caches lessons/resources/activities in IDB + tells SW to pre-cache file URLs), plus per-resource "Guardar offline" on file resources.
+- **Bearer-only auth**: removed `withCredentials: true` from axios to enable proper CORS with credentialed-PWA; auth fully relies on JWT in `localStorage` + `Authorization: Bearer` header (works fully offline).
+
 ## Backlog (P1)
 - Rich text / markdown rendering for lessons (currently pre-wrap)
 - Calendar view for upcoming due dates (shadcn calendar available)

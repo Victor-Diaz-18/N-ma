@@ -1,7 +1,7 @@
-from fastapi import FastAPI
+import sys
+import os
 
-app = FastAPI()
+# Add parent directory to path so we can import our modules
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-@app.get("/api/health")
-def health():
-    return {"status": "ok"}
+from server import app

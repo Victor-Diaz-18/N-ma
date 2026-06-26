@@ -26,7 +26,7 @@ export default function CourseManage() {
     ]);
     setCourse(c.data); setLessons(ls.data); setResources(rs.data); setActivities(as.data); setSubmissions(ss.data);
   };
-  useEffect(() => { loadAll(); }, [id]);
+  useEffect(() => { loadAll(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const switchTab = (t) => { setTab(t); setParams({ tab: t }); };
 

@@ -38,7 +38,7 @@ export default function CourseDetail() {
     }
     setOfflineFiles(fmap);
   };
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const downloadCourseOffline = async () => {
     setDownloading(true);

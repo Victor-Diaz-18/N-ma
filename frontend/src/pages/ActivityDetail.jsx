@@ -24,7 +24,7 @@ export default function ActivityDetail() {
     if (data.type === "quiz") setAnswers(new Array(data.quiz_questions?.length || 0).fill(-1));
     if (data.my_submission) setResult(data.my_submission);
   };
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitAssignment = async (e) => {
     e.preventDefault();

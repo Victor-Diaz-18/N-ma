@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { api } from "../lib/api";
+import { useCourses } from "../hooks/useCourses";
+import { useStats, useUpcoming, useSubmissions } from "../hooks/useGamification";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBProgress } from "../components/nb";
+import { DashboardSkeleton } from "../components/Skeleton";
 import { BookOpen, Trophy, ClipboardList, Zap, Plus, FileCheck2, Award, CalendarClock } from "lucide-react";
 
 export default function Dashboard() {
@@ -14,22 +16,23 @@ export default function Dashboard() {
 
 function StudentDashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [courses, setCourses] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
-  const [upcoming, setUpcoming] = useState([]);
+  const { stats, loading: statsLoading } = useStats();
+  const { courses, loading: coursesLoading } = useCourses();
+  const { submissions, loading: submissionsLoading } = useSubmissions();
+  const { upcoming, loading: upcomingLoading } = useUpcoming();
 
-  useEffect(() => {
-    (async () => {
-      const [s, c, subs, up] = await Promise.all([
-        api.get("/me/stats"),
-        api.get("/courses/mine"),
-        api.get("/me/submissions"),
-        api.get("/me/upcoming"),
-      ]);
-      setStats(s.data); setCourses(c.data); setSubmissions(subs.data); setUpcoming(up.data);
-    })();
-  }, []);
+  const loading = statsLoading || coursesLoading || submissionsLoading || upcomingLoading;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F1E4] grain">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <DashboardSkeleton />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F1E4] grain">
@@ -61,7 +64,7 @@ function StudentDashboard() {
             <div className="label-caps">Insignias ganadas</div>
             <div className="font-display font-black text-4xl">{stats?.earned_badges_count ?? 0} <span className="text-[#3E5A3E] text-xl">/ {stats?.badges?.length ?? 6}</span></div>
             <div className="grid grid-cols-6 gap-2 mt-4">
-              {stats?.badges.map((b) => (
+              {stats?.badges?.map((b) => (
                 <div key={b.id} className={`aspect-square nb-border flex items-center justify-center ${b.earned ? "" : "opacity-25"}`} style={{ background: b.earned ? b.color : "#fff" }} title={b.name} data-testid={`dash-badge-${b.id}`}>
                   <Award className="w-6 h-6" strokeWidth={2.5} />
                 </div>
@@ -176,21 +179,37 @@ function StudentDashboard() {
 
 function TeacherDashboard() {
   const { user } = useAuth();
-  const [courses, setCourses] = useState([]);
-  const [pending, setPending] = useState([]);
-  const [loaded, setLoaded] = useState(false);
+  const { courses, loading: coursesLoading } = useCourses();
+  const [pending, setPending] = React.useState([]);
+  const [loaded, setLoaded] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     (async () => {
-      const c = await api.get("/courses/mine");
-      setCourses(c.data);
-      // Gather pending submissions across all courses
-      const subsArr = await Promise.all(c.data.map((co) => api.get(`/courses/${co.id}/submissions`).then(r => r.data).catch(() => [])));
-      const all = subsArr.flat().filter(s => s.type === "assignment" && s.status !== "graded");
-      setPending(all);
+      try {
+        const subsArr = await Promise.all(
+          courses.map((co) =>
+            api.get(`/courses/${co.id}/submissions`).then((r) => r.data).catch(() => [])
+          )
+        );
+        const all = subsArr.flat().filter((s) => s.type === "assignment" && s.status !== "graded");
+        setPending(all);
+      } catch (e) {
+        console.error(e);
+      }
       setLoaded(true);
     })();
-  }, []);
+  }, [courses]);
+
+  if (coursesLoading) {
+    return (
+      <div className="min-h-screen bg-[#F5F1E4] grain">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <DashboardSkeleton />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F1E4] grain">

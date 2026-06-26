@@ -59,18 +59,18 @@
   },
   "media": {
     "hero_landing": {
-      "url": "https://images.unsplash.com/photo-1659356874404-934e567df530?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHw0fHwlMjJzdHVkZW50cyUyMGxlYXJuaW5nJTIwbGFwdG9wJTIwaGFwcHklMjJ8ZW58MHx8fHwxNzc3NTY0MzgzfDA&ixlib=rb-4.1.0&q=85",
-      "description": "Happy students learning on a laptop",
+      "url": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800",
+      "description": "Students collaborating and learning",
       "placement": "Landing page hero section"
     },
     "gamification_badge_gold_star": {
-      "url": "https://static.prod-images.emergentagent.com/jobs/2a1f8c92-26d8-4e5a-9d11-5c472236d50d/images/53cd42293434c503a623752ed1619536219a9a0d9912d482d60132da2dc8cd49.png",
-      "description": "3D Gold Star Badge",
+      "url": "/badges/gold-star.png",
+      "description": "Gold Star Badge - earned for achievements",
       "placement": "Student dashboard achievements and level up modals"
     },
     "gamification_reward_chest": {
-      "url": "https://static.prod-images.emergentagent.com/jobs/2a1f8c92-26d8-4e5a-9d11-5c472236d50d/images/6379ef9baa4d593a82d54adaffd209b1620515d9c9843417b84914b7a6e52810.png",
-      "description": "3D Reward Chest",
+      "url": "/badges/reward-chest.png",
+      "description": "Reward Chest - milestone completion",
       "placement": "Rewards store or milestone completion screen"
     }
   },

@@ -1,0 +1,216 @@
+from fastapi import APIRouter, Depends, Request
+from motor.motor_asyncio import AsyncIOMotorDatabase
+
+from models.course import CourseCreate
+from models.lesson import LessonCreate
+from models.resource import ResourceCreate
+from services.course_service import CourseService
+from services.auth_service import AuthService
+from services.gamification_service import GamificationService
+from config import get_settings
+
+router = APIRouter(prefix="/api", tags=["courses"])
+
+
+def get_course_service(request: Request) -> CourseService:
+    return request.app.state.course_service
+
+
+def get_auth_service(request: Request) -> AuthService:
+    return request.app.state.auth_service
+
+
+@router.post("/courses")
+async def create_course(
+    data: CourseCreate,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+    course_svc: CourseService = Depends(get_course_service),
+):
+    user = await auth.require_role(request, "teacher")
+    return await course_svc.create_course(
+        data.title, data.description, data.subject, data.cover_color, user["id"], user["name"]
+    )
+
+
+@router.get("/courses")
+async def list_courses(
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+    course_svc: CourseService = Depends(get_course_service),
+):
+    user = await auth.get_current_user(request)
+    return await course_svc.list_courses(user["id"])
+
+
+@router.get("/courses/mine")
+async def my_courses(
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+    course_svc: CourseService = Depends(get_course_service),
+):
+    user = await auth.get_current_user(request)
+    return await course_svc.get_my_courses(user["id"], user["role"])
+
+
+@router.get("/courses/{course_id}")
+async def get_course(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+    course_svc: CourseService = Depends(get_course_service),
+):
+    user = await auth.get_current_user(request)
+    return await course_svc.get_course(course_id, user["id"])
+
+
+@router.post("/courses/{course_id}/enroll")
+async def enroll(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+    course_svc: CourseService = Depends(get_course_service),
+):
+    user = await auth.require_role(request, "student")
+    return await course_svc.enroll_student(course_id, user["id"])
+
+
+@router.delete("/courses/{course_id}")
+async def delete_course(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+    course_svc: CourseService = Depends(get_course_service),
+):
+    user = await auth.require_role(request, "teacher")
+    return await course_svc.delete_course(course_id, user["id"])
+
+
+@router.post("/courses/{course_id}/lessons")
+async def create_lesson(
+    course_id: str,
+    data: LessonCreate,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db: AsyncIOMotorDatabase = request.app.state.db
+
+    course = await db.courses.find_one({"id": course_id})
+    if not course or course["teacher_id"] != user["id"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Not your course")
+
+    import uuid
+    from datetime import datetime, timezone
+    doc = {
+        "id": str(uuid.uuid4()),
+        "course_id": course_id,
+        "title": data.title,
+        "content": data.content,
+        "order": data.order,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.lessons.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@router.get("/courses/{course_id}/lessons")
+async def list_lessons(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    await auth.get_current_user(request)
+    db: AsyncIOMotorDatabase = request.app.state.db
+    return await db.lessons.find({"course_id": course_id}, {"_id": 0}).sort("order", 1).to_list(200)
+
+
+@router.delete("/lessons/{lesson_id}")
+async def delete_lesson(
+    lesson_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db: AsyncIOMotorDatabase = request.app.state.db
+
+    lesson = await db.lessons.find_one({"id": lesson_id})
+    if not lesson:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Not found")
+
+    course = await db.courses.find_one({"id": lesson["course_id"]})
+    if course["teacher_id"] != user["id"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    await db.lessons.delete_one({"id": lesson_id})
+    return {"ok": True}
+
+
+@router.post("/courses/{course_id}/resources")
+async def create_resource(
+    course_id: str,
+    data: ResourceCreate,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db: AsyncIOMotorDatabase = request.app.state.db
+
+    course = await db.courses.find_one({"id": course_id})
+    if not course or course["teacher_id"] != user["id"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Not your course")
+
+    import uuid
+    from datetime import datetime, timezone
+    doc = {
+        "id": str(uuid.uuid4()),
+        "course_id": course_id,
+        "title": data.title,
+        "type": data.type,
+        "url": data.url,
+        "file_id": data.file_id,
+        "description": data.description or "",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.resources.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@router.get("/courses/{course_id}/resources")
+async def list_resources(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    await auth.get_current_user(request)
+    db: AsyncIOMotorDatabase = request.app.state.db
+    return await db.resources.find({"course_id": course_id}, {"_id": 0}).to_list(200)
+
+
+@router.delete("/resources/{resource_id}")
+async def delete_resource(
+    resource_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db: AsyncIOMotorDatabase = request.app.state.db
+
+    r = await db.resources.find_one({"id": resource_id})
+    if not r:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Not found")
+
+    course = await db.courses.find_one({"id": r["course_id"]})
+    if course["teacher_id"] != user["id"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    await db.resources.delete_one({"id": resource_id})
+    return {"ok": True}

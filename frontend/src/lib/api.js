@@ -5,13 +5,10 @@ export const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export const api = axios.create({
   baseURL: API,
+  withCredentials: true, // Send cookies with requests
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("eq_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// No need for Authorization header - backend uses HttpOnly cookies
 
 // Cache successful GETs, fall back to IndexedDB on network failure
 api.interceptors.response.use(
@@ -46,7 +43,7 @@ export async function submitWithQueue(url, payload, kind = "submission") {
   } catch (e) {
     if (!e.response) {
       // network failure → queue
-      await queueSubmission({ url, payload, kind, token: localStorage.getItem("eq_token") });
+      await queueSubmission({ url, payload, kind });
       return { data: null, queued: true };
     }
     throw e;

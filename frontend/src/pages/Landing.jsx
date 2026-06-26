@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { NBButton, NBBadge, NBCard } from "../components/nb";
 import { Trophy, BookOpen, Sparkles, ArrowRight, Star, Target } from "lucide-react";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_courseforge-69/artifacts/fi0qofox_e5ed343a-cd69-4fa8-8147-0cc3ec580460.jpeg";
+const LOGO_URL = "/logo.svg";
 const MARQUEE_WORDS = ["Aprende", "Enseña", "Sube de nivel", "Gana XP", "Desbloquea insignias", "Escala el ranking"];
 
 export default function Landing() {

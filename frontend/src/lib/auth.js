@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     setError("");
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      if (data.token) localStorage.setItem("eq_token", data.token);
+      // Token is set as HttpOnly cookie by backend - no need to store in localStorage
       setUser(data.user);
       return data.user;
     } catch (e) {
@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     setError("");
     try {
       const { data } = await api.post("/auth/register", payload);
-      if (data.token) localStorage.setItem("eq_token", data.token);
+      // Token is set as HttpOnly cookie by backend - no need to store in localStorage
       setUser(data.user);
       return data.user;
     } catch (e) {
@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try { await api.post("/auth/logout"); } catch (e) { /* ignore */ }
-    localStorage.removeItem("eq_token");
+    // Cookie is cleared by backend - no need to clear localStorage
     setUser(false);
   };
 

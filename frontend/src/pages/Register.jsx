@@ -5,7 +5,7 @@ import { NBButton, NBCard, NBInput } from "../components/nb";
 import { GraduationCap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_courseforge-69/artifacts/fi0qofox_e5ed343a-cd69-4fa8-8147-0cc3ec580460.jpeg";
+const LOGO_URL = "/logo.svg";
 
 export default function Register() {
   const { register } = useAuth();

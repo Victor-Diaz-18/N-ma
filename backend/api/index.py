@@ -91,4 +91,12 @@ def debug():
     except Exception as e:
         steps["file_routes"] = str(e)
 
+    try:
+        import importlib
+        import server
+        importlib.reload(server)
+        steps["full_server"] = "ok"
+    except Exception as e:
+        steps["full_server"] = f"{type(e).__name__}: {e}"
+
     return steps

@@ -1,20 +1,22 @@
 import sys
 import os
-import json
-import traceback
 
-# Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-try:
-    from server import app
-    handler = app
-except Exception as e:
-    tb = traceback.format_exc()
-    
-    def handler(environ, start_response):
-        status = "200 OK"
-        headers = [("Content-Type", "application/json")]
-        body = json.dumps({"error": str(e), "traceback": tb})
-        start_response(status, headers)
-        return [body.encode("utf-8")]
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/api/test-import")
+def test_import():
+    try:
+        from config import get_settings
+        settings = get_settings()
+        return {"mongo_url": settings.mongo_url[:20] + "...", "db_name": settings.db_name}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})

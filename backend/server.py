@@ -1,7 +1,12 @@
 from dotenv import load_dotenv
 from pathlib import Path
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+import os
+
+# Load .env file if it exists (for local development)
+# In Vercel, environment variables are set in the dashboard
+env_path = Path(__file__).parent / '.env'
+if env_path.exists():
+    load_dotenv(env_path)
 
 import os
 import uuid

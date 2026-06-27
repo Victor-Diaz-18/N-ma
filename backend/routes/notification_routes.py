@@ -3,10 +3,14 @@ from pydantic import BaseModel
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from services.auth_service import AuthService, get_auth_service
+from services.auth_service import AuthService
 from services.notification_service import NotificationService
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
+
+
+def get_auth_service(request: Request) -> AuthService:
+    return request.app.state.auth_service
 
 
 def get_notification_service(request: Request) -> NotificationService:

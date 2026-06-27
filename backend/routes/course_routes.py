@@ -81,9 +81,8 @@ async def enroll(
     result = await course_svc.enroll_student(course_id, user["id"])
     if result.get("ok") and not result.get("already"):
         from services.notification_service import NotificationService
-        from dependencies import get_db
-        notif_svc = NotificationService(get_db(request))
-        course = await get_db(request).courses.find_one({"id": course_id}, {"_id": 0})
+        notif_svc = NotificationService(request.app.state.db)
+        course = await request.app.state.db.courses.find_one({"id": course_id}, {"_id": 0})
         if course:
             await notif_svc.create(
                 user["id"],

@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from typing import Optional
+from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from services.auth_service import AuthService, get_auth_service
 from services.notification_service import NotificationService
-from dependencies import get_db
 
 router = APIRouter()
 
 
 def get_notification_service(request: Request) -> NotificationService:
-    return NotificationService(get_db(request))
+    db: AsyncIOMotorDatabase = request.app.state.db
+    return NotificationService(db)
 
 
 class MarkReadRequest(BaseModel):

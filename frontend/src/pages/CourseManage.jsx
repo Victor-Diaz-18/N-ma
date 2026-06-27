@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api, API } from "../lib/api";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBInput, NBTextarea } from "../components/nb";
-import { Plus, Trash2, FileText, LinkIcon, BookOpen, ClipboardList, Upload, Star } from "lucide-react";
+import { Plus, Trash2, FileText, LinkIcon, BookOpen, ClipboardList, Upload, Star, Download } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CourseManage() {
@@ -63,7 +63,7 @@ export default function CourseManage() {
         {tab === "lessons" && <LessonsPanel courseId={id} lessons={lessons} reload={loadAll} />}
         {tab === "resources" && <ResourcesPanel courseId={id} resources={resources} reload={loadAll} />}
         {tab === "activities" && <ActivitiesPanel courseId={id} activities={activities} reload={loadAll} />}
-        {tab === "submissions" && <SubmissionsPanel submissions={submissions} reload={loadAll} />}
+        {tab === "submissions" && <SubmissionsPanel courseId={id} submissions={submissions} reload={loadAll} />}
       </main>
     </div>
   );
@@ -243,7 +243,7 @@ function ActivitiesPanel({ courseId, activities, reload }) {
   );
 }
 
-function SubmissionsPanel({ submissions, reload }) {
+function SubmissionsPanel({ courseId, submissions, reload }) {
   const [grading, setGrading] = useState(null);
   const [score, setScore] = useState(0); const [feedback, setFeedback] = useState("");
 
@@ -254,8 +254,19 @@ function SubmissionsPanel({ submissions, reload }) {
     setGrading(null); reload();
   };
 
+  const exportCSV = () => {
+    window.open(`${API}/courses/${courseId}/submissions/export`, "_blank");
+  };
+
   return (
     <div className="space-y-3">
+      {submissions.length > 0 && (
+        <div className="flex justify-end">
+          <NBButton variant="ghost" onClick={exportCSV} data-testid="export-csv-btn">
+            <Download className="inline w-4 h-4 mr-1" /> Exportar CSV
+          </NBButton>
+        </div>
+      )}
       {submissions.length === 0 && <NBCard className="p-6 text-sm text-[#3E5A3E]">Aún no hay entregas.</NBCard>}
       {submissions.map((s) => (
         <NBCard key={s.id} className="p-4" data-testid={`submission-${s.id}`}>

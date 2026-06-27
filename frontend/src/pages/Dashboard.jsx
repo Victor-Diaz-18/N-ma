@@ -1,12 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import { api } from "../lib/api";
 import { useCourses } from "../hooks/useCourses";
 import { useStats, useUpcoming, useSubmissions } from "../hooks/useGamification";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBProgress } from "../components/nb";
 import { DashboardSkeleton } from "../components/Skeleton";
-import { BookOpen, Trophy, ClipboardList, Zap, Plus, FileCheck2, Award, CalendarClock } from "lucide-react";
+import { BookOpen, Trophy, ClipboardList, Zap, Plus, FileCheck2, Award, CalendarClock, BarChart3 } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -181,6 +182,7 @@ function TeacherDashboard() {
   const { user } = useAuth();
   const { courses, loading: coursesLoading } = useCourses();
   const [pending, setPending] = React.useState([]);
+  const [metrics, setMetrics] = React.useState(null);
   const [loaded, setLoaded] = React.useState(false);
 
   React.useEffect(() => {
@@ -191,8 +193,17 @@ function TeacherDashboard() {
             api.get(`/courses/${co.id}/submissions`).then((r) => r.data).catch(() => [])
           )
         );
-        const all = subsArr.flat().filter((s) => s.type === "assignment" && s.status !== "graded");
-        setPending(all);
+        const all = subsArr.flat();
+        const pendingSubs = all.filter((s) => s.type === "assignment" && s.status !== "graded");
+        const gradedSubs = all.filter((s) => s.status === "graded" && s.score != null);
+
+        const totalStudents = courses.reduce((s, c) => s + (c.student_count || 0), 0);
+        const avgScore = gradedSubs.length > 0
+          ? Math.round(gradedSubs.reduce((s, sub) => s + (sub.score / (sub.max_points || 100)) * 100, 0) / gradedSubs.length)
+          : 0;
+
+        setPending(pendingSubs);
+        setMetrics({ totalStudents, avgScore, totalSubmissions: all.length, gradedSubmissions: gradedSubs.length });
       } catch (e) {
         console.error(e);
       }
@@ -223,14 +234,18 @@ function TeacherDashboard() {
           <Link to="/courses/new"><NBButton variant="dark" data-testid="teacher-create-course-btn"><Plus className="inline w-4 h-4 mr-1" /> Nuevo curso</NBButton></Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <NBCard color="yellow" className="p-6"><Stat label="Cursos" value={courses.length} icon={<BookOpen />} /></NBCard>
-          <NBCard color="purple" className="p-6"><Stat label="Estudiantes" value={courses.reduce((s, c) => s + (c.student_count || 0), 0)} icon={<ClipboardList />} /></NBCard>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+          <NBCard color="yellow" className="p-6"><Stat label="Mis cursos" value={courses.length} icon={<BookOpen />} /></NBCard>
+          <NBCard color="purple" className="p-6"><Stat label="Estudiantes" value={metrics?.totalStudents ?? courses.reduce((s, c) => s + (c.student_count || 0), 0)} icon={<ClipboardList />} /></NBCard>
           <NBCard color="teal" className="p-6"><Stat label="Por calificar" value={pending.length} icon={<FileCheck2 />} /></NBCard>
+          <NBCard className="p-6"><Stat label="Promedio" value={metrics ? `${metrics.avgScore}%` : "—"} icon={<BarChart3 />} /></NBCard>
         </div>
 
         <section>
-          <h2 className="font-display font-black text-2xl uppercase text-[#1F5A2A] mb-4">Tus cursos</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display font-black text-2xl uppercase text-[#1F5A2A]">Mis cursos</h2>
+            <Link to="/courses"><NBButton variant="ghost" data-testid="teacher-browse-courses-btn">Ver catálogo <Plus className="inline w-4 h-4 ml-1" /></NBButton></Link>
+          </div>
           {loaded && courses.length === 0 ? (
             <NBCard className="p-8 text-center">
               <p className="mb-3">Aún no tienes cursos. Empieza el primero.</p>

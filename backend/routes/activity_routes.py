@@ -1,8 +1,11 @@
 import uuid
+import csv
+import io
 from datetime import datetime, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from models.activity import ActivityCreate
@@ -349,3 +352,56 @@ async def grade_submission(
         )
 
     return {"ok": True}
+
+
+@router.get("/courses/{course_id}/submissions/export")
+async def export_submissions_csv(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db = get_db(request)
+
+    course = await db.courses.find_one({"id": course_id})
+    if not course or course["teacher_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    subs = await db.submissions.find(
+        {"course_id": course_id}, {"_id": 0}
+    ).sort("submitted_at", -1).to_list(500)
+
+    for s in subs:
+        a = await db.activities.find_one(
+            {"id": s["activity_id"]}, {"_id": 0, "title": 1, "type": 1, "max_points": 1}
+        )
+        s["activity_title"] = a["title"] if a else "Deleted"
+        s["activity_type"] = a["type"] if a else "?"
+        s["max_points"] = a.get("max_points", 100) if a else 100
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Estudiante", "Actividad", "Tipo", "Puntaje", "Max Puntos", "Porcentaje", "Estado", "Feedback", "Fecha"])
+    for s in subs:
+        score = s.get("score")
+        max_pts = s.get("max_points", 100)
+        pct = f"{round((score / max_pts) * 100)}%" if score is not None and max_pts else "—"
+        writer.writerow([
+            s.get("student_name", ""),
+            s.get("activity_title", ""),
+            s.get("activity_type", ""),
+            score if score is not None else "",
+            max_pts,
+            pct,
+            s.get("status", ""),
+            s.get("feedback", ""),
+            s.get("submitted_at", ""),
+        ])
+
+    output.seek(0)
+    filename = f"calificaciones_{course.get('title', 'curso').replace(' ', '_')}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )

@@ -3,13 +3,26 @@ import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import Navbar from "../components/Navbar";
 import { NBCard, NBProgress, NBBadge } from "../components/nb";
-import { Award, Zap } from "lucide-react";
+import { Award, Zap, BookOpen, Users, BarChart3 } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
+  const [teacherStats, setTeacherStats] = useState(null);
 
-  useEffect(() => { (async () => { const { data } = await api.get("/me/stats"); setStats(data); })(); }, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        if (user?.role === "student") {
+          const { data } = await api.get("/me/stats");
+          setStats(data);
+        } else if (user?.role === "teacher") {
+          const { data } = await api.get("/me/teacher-stats");
+          setTeacherStats(data);
+        }
+      } catch (e) { /* ignore */ }
+    })();
+  }, [user]);
 
   if (!user) return null;
 
@@ -64,6 +77,32 @@ export default function Profile() {
               </div>
             </section>
           </>
+        )}
+
+        {user.role === "teacher" && teacherStats && (
+          <div className="grid md:grid-cols-2 gap-5">
+            <NBCard color="yellow" className="p-6">
+              <BookOpen className="w-8 h-8 mb-2" strokeWidth={2.5} />
+              <div className="label-caps">Mis cursos</div>
+              <div className="font-display font-black text-5xl">{teacherStats.total_courses}</div>
+            </NBCard>
+            <NBCard color="purple" className="p-6">
+              <Users className="w-8 h-8 mb-2" strokeWidth={2.5} />
+              <div className="label-caps">Estudiantes totales</div>
+              <div className="font-display font-black text-5xl">{teacherStats.total_students}</div>
+            </NBCard>
+            <NBCard color="teal" className="p-6">
+              <BarChart3 className="w-8 h-8 mb-2" strokeWidth={2.5} />
+              <div className="label-caps">Promedio general</div>
+              <div className="font-display font-black text-5xl">{teacherStats.avg_score_percent}%</div>
+            </NBCard>
+            <NBCard className="p-6">
+              <Award className="w-8 h-8 mb-2" strokeWidth={2.5} />
+              <div className="label-caps">Entregas calificadas</div>
+              <div className="font-display font-black text-5xl">{teacherStats.graded_submissions}</div>
+              <div className="text-sm text-[#3E5A3E]">de {teacherStats.total_submissions} totales</div>
+            </NBCard>
+          </div>
         )}
       </main>
     </div>

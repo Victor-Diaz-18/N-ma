@@ -84,3 +84,45 @@ async def leaderboard(
     user = await auth.get_current_user(request)
     skip = (max(page, 1) - 1) * limit
     return await gamification.get_leaderboard(user["id"], skip=skip, limit=limit)
+
+
+@router.get("/me/teacher-stats")
+async def teacher_stats(
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db = get_db(request)
+
+    courses = await db.courses.find(
+        {"teacher_id": user["id"]}, {"_id": 0}
+    ).to_list(500)
+
+    total_students = 0
+    total_submissions = 0
+    graded_submissions = 0
+    total_score = 0
+
+    for c in courses:
+        count = await db.enrollments.count_documents({"course_id": c["id"]})
+        total_students += count
+
+        subs = await db.submissions.find(
+            {"course_id": c["id"]}, {"_id": 0}
+        ).to_list(500)
+        total_submissions += len(subs)
+
+        for s in subs:
+            if s.get("status") == "graded" and s.get("score") is not None:
+                graded_submissions += 1
+                total_score += s["score"] / (s.get("max_points") or 100) * 100
+
+    avg_score = round(total_score / graded_submissions) if graded_submissions > 0 else 0
+
+    return {
+        "total_courses": len(courses),
+        "total_students": total_students,
+        "total_submissions": total_submissions,
+        "graded_submissions": graded_submissions,
+        "avg_score_percent": avg_score,
+    }

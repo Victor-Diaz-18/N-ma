@@ -4,6 +4,8 @@ import { useAuth } from "../lib/auth";
 import { NBButton, NBCard, NBInput } from "../components/nb";
 import { GraduationCap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { registerSchema } from "../lib/validations";
+import { useFormValidation } from "../hooks/useFormValidation";
 
 const LOGO_URL = "/logo.svg";
 
@@ -17,15 +19,26 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { errors, touched, validate, validateField, touchField } = useFormValidation(registerSchema);
+
+  const formData = { name, email, password };
 
   const submit = async (e) => {
     e.preventDefault();
-    setError(""); setLoading(true);
+    setError("");
+    if (!validate(formData)) return;
+    setLoading(true);
     try {
       const u = await register({ name, email, password, role });
       toast.success(`¡Bienvenido, ${u.name}!`);
       nav("/dashboard");
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      if (e.displayMessage) {
+        toast.error(e.displayMessage);
+      } else {
+        setError(e.message);
+      }
+    }
     finally { setLoading(false); }
   };
 
@@ -72,15 +85,47 @@ export default function Register() {
           <form onSubmit={submit} className="space-y-4">
             <div>
               <label className="label-caps block mb-1.5">Nombre completo</label>
-              <NBInput required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ana Pérez" data-testid="register-name-input" />
+              <NBInput
+                value={name}
+                onChange={(e) => { setName(e.target.value); validateField("name", { ...formData, name: e.target.value }); }}
+                onBlur={() => touchField("name")}
+                placeholder="Ana Pérez"
+                className={errors.name && touched.name ? "border-[#FF6B6B]" : ""}
+                data-testid="register-name-input"
+              />
+              {errors.name && touched.name && (
+                <p className="text-[#FF6B6B] text-xs mt-1 font-medium" data-testid="register-name-error">{errors.name}</p>
+              )}
             </div>
             <div>
               <label className="label-caps block mb-1.5">Correo</label>
-              <NBInput type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" data-testid="register-email-input" />
+              <NBInput
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); validateField("email", { ...formData, email: e.target.value }); }}
+                onBlur={() => touchField("email")}
+                placeholder="tu@correo.com"
+                className={errors.email && touched.email ? "border-[#FF6B6B]" : ""}
+                data-testid="register-email-input"
+              />
+              {errors.email && touched.email && (
+                <p className="text-[#FF6B6B] text-xs mt-1 font-medium" data-testid="register-email-error">{errors.email}</p>
+              )}
             </div>
             <div>
               <label className="label-caps block mb-1.5">Contraseña</label>
-              <NBInput type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" data-testid="register-password-input" />
+              <NBInput
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); validateField("password", { ...formData, password: e.target.value }); }}
+                onBlur={() => touchField("password")}
+                placeholder="Mínimo 6 caracteres"
+                className={errors.password && touched.password ? "border-[#FF6B6B]" : ""}
+                data-testid="register-password-input"
+              />
+              {errors.password && touched.password && (
+                <p className="text-[#FF6B6B] text-xs mt-1 font-medium" data-testid="register-password-error">{errors.password}</p>
+              )}
             </div>
             {error && <div className="nb-border bg-[#FF6B6B] text-white px-3 py-2 text-sm font-medium" data-testid="register-error">{error}</div>}
             <NBButton type="submit" variant="dark" className="w-full" disabled={loading} data-testid="register-submit-btn">

@@ -2,8 +2,10 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { ThemeProvider } from "@/lib/theme";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import RateLimitBanner from "@/components/RateLimitBanner";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -26,25 +28,28 @@ function App() {
   return (
     <div className="App">
       <ErrorBoundary>
-        <AuthProvider>
-          <BrowserRouter>
-            <Toaster position="top-right" toastOptions={{ style: { border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 0 #0A0A0A", borderRadius: "4px", fontWeight: 600 }}} />
-            <Routes>
-              <Route path="/" element={<RootRoute />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
-              <Route path="/courses/new" element={<ProtectedRoute role="teacher"><CourseNew /></ProtectedRoute>} />
-              <Route path="/courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
-              <Route path="/courses/:id/manage" element={<ProtectedRoute role="teacher"><CourseManage /></ProtectedRoute>} />
-              <Route path="/activities/:id" element={<ProtectedRoute><ActivityDetail /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <Toaster position="top-right" toastOptions={{ style: { border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 0 #0A0A0A", borderRadius: "4px", fontWeight: 600 }}} />
+            <RateLimitBanner />
+              <Routes>
+                <Route path="/" element={<RootRoute />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+                <Route path="/courses/new" element={<ProtectedRoute role="teacher"><CourseNew /></ProtectedRoute>} />
+                <Route path="/courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
+                <Route path="/courses/:id/manage" element={<ProtectedRoute role="teacher"><CourseManage /></ProtectedRoute>} />
+                <Route path="/activities/:id" element={<ProtectedRoute><ActivityDetail /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </ThemeProvider>
       </ErrorBoundary>
     </div>
   );

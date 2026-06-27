@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import Navbar from "../components/Navbar";
-import { NBCard, NBBadge } from "../components/nb";
-import { Trophy, Crown } from "lucide-react";
+import { NBCard, NBButton, NBBadge } from "../components/nb";
+import { Trophy, Crown, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Leaderboard() {
   const [rows, setRows] = useState([]);
-  useEffect(() => { (async () => { const { data } = await api.get("/leaderboard"); setRows(data); })(); }, []);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const load = async (p = 1) => {
+    setLoading(true);
+    try {
+      const { data } = await api.get(`/leaderboard?page=${p}&limit=20`);
+      setRows(data.items);
+      setPages(data.pages);
+      setTotal(data.total);
+      setPage(p);
+    } catch (e) { /* ignore */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(1); }, []);
 
   return (
     <div className="min-h-screen bg-[#F5F1E4] grain">
@@ -15,13 +32,13 @@ export default function Leaderboard() {
         <div className="flex items-end gap-3">
           <Trophy className="w-10 h-10" strokeWidth={2.5} />
           <div>
-            <div className="label-caps text-[#3E5A3E]">Top 50 estudiantes</div>
+            <div className="label-caps text-[#3E5A3E]">{total} estudiantes</div>
             <h1 className="font-display font-black text-4xl sm:text-5xl uppercase text-[#1F5A2A]">Ranking</h1>
           </div>
         </div>
 
-        {/* Podium */}
-        {rows.length > 0 && (
+        {/* Podium — only on first page */}
+        {page === 1 && rows.length >= 3 && (
           <div className="grid grid-cols-3 gap-3 items-end">
             <PodiumCard entry={rows[1]} place={2} height="h-36" color="#C5E1A5" />
             <PodiumCard entry={rows[0]} place={1} height="h-48" color="#8BC34A" crown />
@@ -55,10 +72,24 @@ export default function Leaderboard() {
                   <td className="px-4 py-3 text-right font-mono font-bold">{r.xp}</td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-[#3E5A3E]">Aún no hay estudiantes.</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-[#3E5A3E]">Aún no hay estudiantes.</td></tr>}
             </tbody>
           </table>
         </NBCard>
+
+        {pages > 1 && (
+          <div className="flex items-center justify-center gap-3 pt-2" data-testid="leaderboard-pagination">
+            <NBButton variant="ghost" disabled={page <= 1} onClick={() => load(page - 1)}>
+              <ChevronLeft className="w-4 h-4 inline" /> Anterior
+            </NBButton>
+            <span className="font-mono text-sm text-[#3E5A3E]">
+              Página {page} de {pages}
+            </span>
+            <NBButton variant="ghost" disabled={page >= pages} onClick={() => load(page + 1)}>
+              Siguiente <ChevronRight className="w-4 h-4 inline" />
+            </NBButton>
+          </div>
+        )}
       </main>
     </div>
   );

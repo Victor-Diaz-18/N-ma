@@ -339,4 +339,13 @@ async def grade_submission(
         if percent >= 0.9:
             await gamification.grant_badge(sub["student_id"], "quiz_master")
 
+        from services.notification_service import NotificationService
+        notif_svc = NotificationService(db)
+        await notif_svc.create(
+            sub["student_id"],
+            "Actividad calificada",
+            f"Tu entrega de '{sub.get('activity_title', 'actividad')}' fue calificada: {data.score}/{max_points}",
+            f"/courses/{sub['course_id']}/manage?tab=submissions",
+        )
+
     return {"ok": True}

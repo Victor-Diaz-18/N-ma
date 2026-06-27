@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { NBButton, NBCard, NBInput } from "../components/nb";
 import { toast } from "sonner";
+import { loginSchema } from "../lib/validations";
+import { useFormValidation } from "../hooks/useFormValidation";
 
 const LOGO_URL = "/logo.svg";
 
@@ -13,15 +15,26 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { errors, touched, validate, validateField, touchField } = useFormValidation(loginSchema);
+
+  const formData = { email, password };
 
   const submit = async (e) => {
     e.preventDefault();
-    setError(""); setLoading(true);
+    setError("");
+    if (!validate(formData)) return;
+    setLoading(true);
     try {
       const u = await login(email, password);
       toast.success(`¡Bienvenido, ${u.name}!`);
       nav("/dashboard");
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      if (e.displayMessage) {
+        toast.error(e.displayMessage);
+      } else {
+        setError(e.message);
+      }
+    }
     finally { setLoading(false); }
   };
 
@@ -44,13 +57,33 @@ export default function Login() {
           <form onSubmit={submit} className="space-y-4">
             <div>
               <label className="label-caps block mb-1.5">Correo</label>
-              <NBInput type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                       placeholder="tu@correo.com" data-testid="login-email-input" />
+              <NBInput
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); validateField("email", { ...formData, email: e.target.value }); }}
+                onBlur={() => touchField("email")}
+                placeholder="tu@correo.com"
+                className={errors.email && touched.email ? "border-[#FF6B6B]" : ""}
+                data-testid="login-email-input"
+              />
+              {errors.email && touched.email && (
+                <p className="text-[#FF6B6B] text-xs mt-1 font-medium" data-testid="login-email-error">{errors.email}</p>
+              )}
             </div>
             <div>
               <label className="label-caps block mb-1.5">Contraseña</label>
-              <NBInput type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                       placeholder="••••••••" data-testid="login-password-input" />
+              <NBInput
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); validateField("password", { ...formData, password: e.target.value }); }}
+                onBlur={() => touchField("password")}
+                placeholder="••••••••"
+                className={errors.password && touched.password ? "border-[#FF6B6B]" : ""}
+                data-testid="login-password-input"
+              />
+              {errors.password && touched.password && (
+                <p className="text-[#FF6B6B] text-xs mt-1 font-medium" data-testid="login-password-error">{errors.password}</p>
+              )}
             </div>
             {error && <div className="nb-border bg-[#FF6B6B] text-white px-3 py-2 text-sm font-medium" data-testid="login-error">{error}</div>}
             <NBButton type="submit" variant="dark" className="w-full" disabled={loading} data-testid="login-submit-btn">

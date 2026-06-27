@@ -105,3 +105,58 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .animate-marquee { animation: marquee 30s linear infinite; }
 
 ::selection { background: #8BC34A; color: #1F5A2A; }
+
+/* Dark mode */
+.dark {
+  --background: 135 10% 10%;
+  --foreground: 120 15% 85%;
+  --card: 135 10% 14%;
+  --card-foreground: 120 15% 85%;
+  --popover: 135 10% 14%;
+  --popover-foreground: 120 15% 85%;
+  --primary: 123 40% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 122 38% 30%;
+  --secondary-foreground: 120 15% 85%;
+  --muted: 135 10% 18%;
+  --muted-foreground: 120 10% 55%;
+  --accent: 88 54% 40%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 80% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 120 15% 30%;
+  --input: 135 10% 20%;
+  --ring: 123 40% 50%;
+}
+
+.dark body {
+  background: #141a14;
+  color: #c8e6c8;
+}
+
+.dark .nb-border { border-color: #5a8a5e; }
+.dark .nb-shadow { box-shadow: 4px 4px 0 0 #3a5a3e; }
+.dark .nb-shadow-lg { box-shadow: 6px 6px 0 0 #3a5a3e; }
+.dark .nb-shadow-sm { box-shadow: 2px 2px 0 0 #3a5a3e; }
+
+.dark .grain {
+  background-image: radial-gradient(rgba(200,230,200,0.03) 1px, transparent 1px);
+}
+
+/* Dark mode overrides for hardcoded colors */
+.dark .bg-\[\#F5F1E4\] { background-color: #1a221a !important; }
+.dark .bg-white { background-color: #1e2a1e !important; }
+.dark .text-\[\#1F5A2A\] { color: #8BC34A !important; }
+.dark .text-\[\#3E5A3E\] { color: #a0c8a0 !important; }
+.dark .text-\[\#4A4A4A\] { color: #b0c8b0 !important; }
+.dark .bg-\[\#A5D6A7\] { background-color: #2d5a30 !important; }
+.dark .bg-\[\#8BC34A\] { background-color: #3a6a20 !important; }
+.dark .bg-\[\#FF6B6B\] { background-color: #c04040 !important; }
+.dark .border-\[\#1F5A2A\] { border-color: #5a8a5e !important; }
+.dark .bg-\[\#1F5A2A\] { background-color: #2a4a2e !important; }
+
+/* Scrollbar dark mode */
+.dark ::-webkit-scrollbar { width: 8px; }
+.dark ::-webkit-scrollbar-track { background: #1a221a; }
+.dark ::-webkit-scrollbar-thumb { background: #3a5a3e; border-radius: 4px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #5a8a5e; }

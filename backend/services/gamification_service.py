@@ -99,16 +99,17 @@ class GamificationService:
             "submissions_count": submissions_count,
         }
 
-    async def get_leaderboard(self, current_user_id: str) -> List[dict]:
+    async def get_leaderboard(self, current_user_id: str, skip: int = 0, limit: int = 20) -> dict:
+        total = await self.db.users.count_documents({"role": "student"})
         users = await self.db.users.find(
             {"role": "student"}, {"_id": 0, "password_hash": 0}
-        ).sort("xp", -1).limit(50).to_list(50)
+        ).sort("xp", -1).skip(skip).limit(limit).to_list(limit)
 
         result = []
         for i, u in enumerate(users):
             badge_count = await self.db.user_badges.count_documents({"user_id": u["id"]})
             result.append({
-                "rank": i + 1,
+                "rank": skip + i + 1,
                 "id": u["id"],
                 "name": u["name"],
                 "xp": u.get("xp", 0),
@@ -117,4 +118,5 @@ class GamificationService:
                 "badge_count": badge_count,
                 "is_me": u["id"] == current_user_id,
             })
-        return result
+        pages = max(1, (total + limit - 1) // limit)
+        return {"items": result, "total": total, "page": skip // limit + 1, "pages": pages}

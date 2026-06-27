@@ -15,11 +15,18 @@
 </p>
 
 <p align="center">
+  <a href="https://numa-front.vercel.app"><img src="https://img.shields.io/badge/Frontend-Deployed-000?logo=vercel&logoColor=white" alt="Frontend Deployed"/></a>
+  <a href="https://n-ma-ww9o.vercel.app/docs"><img src="https://img.shields.io/badge/Backend-Deployed-000?logo=vercel&logoColor=white" alt="Backend Deployed"/></a>
+  <a href="https://numa-front.vercel.app"><img src="https://img.shields.io/badge/Status-Online-brightgreen" alt="Status"/></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React"/>
   <img src="https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi" alt="FastAPI"/>
   <img src="https://img.shields.io/badge/MongoDB-8.0-47A248?logo=mongodb" alt="MongoDB"/>
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss" alt="Tailwind"/>
-  <img src="https://img.shields.io/badge/Vercel-Deployed-000?logo=vercel" alt="Vercel"/>
+  <img src="https://img.shields.io/badge/Tests-Passing-brightgreen" alt="Tests"/>
+  <img src="https://img.shields.io/badge/PWA-Enabled-5A0FC8" alt="PWA"/>
 </p>
 
 ---

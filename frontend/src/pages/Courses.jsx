@@ -4,21 +4,35 @@ import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBInput, NBTextarea } from "../components/nb";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { courseSchema } from "../lib/validations";
+import { useFormValidation } from "../hooks/useFormValidation";
 
 const COLORS = ["#8BC34A", "#A5D6A7", "#C5E1A5", "#2E8B7F", "#E0E879", "#FFD0CD"];
+const PAGE_SIZE = 12;
 
 export function Courses() {
   const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    const { data } = await api.get("/courses");
-    setCourses(data);
+  const load = async (p = page) => {
+    setLoading(true);
+    try {
+      const { data } = await api.get(`/courses?page=${p}&limit=${PAGE_SIZE}`);
+      setCourses(data.items);
+      setPages(data.pages);
+      setTotal(data.total);
+      setPage(p);
+    } catch (e) { /* ignore */ }
+    setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(1); }, []);
 
   const enroll = async (id) => {
     try {
@@ -28,7 +42,9 @@ export function Courses() {
     } catch (e) { toast.error("No se pudo inscribir"); }
   };
 
-  const filtered = courses.filter(c => c.title.toLowerCase().includes(q.toLowerCase()) || c.subject.toLowerCase().includes(q.toLowerCase()));
+  const filtered = q
+    ? courses.filter(c => c.title.toLowerCase().includes(q.toLowerCase()) || c.subject.toLowerCase().includes(q.toLowerCase()))
+    : courses;
 
   return (
     <div className="min-h-screen bg-[#F5F1E4] grain">
@@ -75,6 +91,30 @@ export function Courses() {
             ))}
           </div>
         )}
+
+        {pages > 1 && (
+          <div className="flex items-center justify-center gap-3 pt-4" data-testid="courses-pagination">
+            <NBButton
+              variant="ghost"
+              disabled={page <= 1}
+              onClick={() => load(page - 1)}
+              data-testid="courses-prev-btn"
+            >
+              <ChevronLeft className="w-4 h-4 inline" /> Anterior
+            </NBButton>
+            <span className="font-mono text-sm text-[#3E5A3E]">
+              Página {page} de {pages} · {total} cursos
+            </span>
+            <NBButton
+              variant="ghost"
+              disabled={page >= pages}
+              onClick={() => load(page + 1)}
+              data-testid="courses-next-btn"
+            >
+              Siguiente <ChevronRight className="w-4 h-4 inline" />
+            </NBButton>
+          </div>
+        )}
       </main>
     </div>
   );
@@ -87,9 +127,14 @@ export function CourseNew() {
   const [subject, setSubject] = useState("");
   const [color, setColor] = useState("#8BC34A");
   const [loading, setLoading] = useState(false);
+  const { errors, touched, validate, validateField, touchField } = useFormValidation(courseSchema);
+
+  const formData = { title, subject, description };
 
   const submit = async (e) => {
-    e.preventDefault(); setLoading(true);
+    e.preventDefault();
+    if (!validate(formData)) return;
+    setLoading(true);
     try {
       const { data } = await api.post("/courses", { title, description, subject, cover_color: color });
       toast.success("¡Curso creado!");
@@ -107,15 +152,45 @@ export function CourseNew() {
           <form onSubmit={submit} className="space-y-4">
             <div>
               <label className="label-caps block mb-1.5">Título</label>
-              <NBInput required value={title} onChange={(e) => setTitle(e.target.value)} data-testid="course-new-title" />
+              <NBInput
+                value={title}
+                onChange={(e) => { setTitle(e.target.value); validateField("title", { ...formData, title: e.target.value }); }}
+                onBlur={() => touchField("title")}
+                className={errors.title && touched.title ? "border-[#FF6B6B]" : ""}
+                placeholder="Ej: Biología Celular"
+                data-testid="course-new-title"
+              />
+              {errors.title && touched.title && (
+                <p className="text-[#FF6B6B] text-xs mt-1 font-medium">{errors.title}</p>
+              )}
             </div>
             <div>
               <label className="label-caps block mb-1.5">Materia</label>
-              <NBInput required value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Matemáticas, Historia..." data-testid="course-new-subject" />
+              <NBInput
+                value={subject}
+                onChange={(e) => { setSubject(e.target.value); validateField("subject", { ...formData, subject: e.target.value }); }}
+                onBlur={() => touchField("subject")}
+                placeholder="Matemáticas, Historia..."
+                className={errors.subject && touched.subject ? "border-[#FF6B6B]" : ""}
+                data-testid="course-new-subject"
+              />
+              {errors.subject && touched.subject && (
+                <p className="text-[#FF6B6B] text-xs mt-1 font-medium">{errors.subject}</p>
+              )}
             </div>
             <div>
               <label className="label-caps block mb-1.5">Descripción</label>
-              <NBTextarea required value={description} onChange={(e) => setDescription(e.target.value)} rows={4} data-testid="course-new-desc" />
+              <NBTextarea
+                value={description}
+                onChange={(e) => { setDescription(e.target.value); validateField("description", { ...formData, description: e.target.value }); }}
+                onBlur={() => touchField("description")}
+                rows={4}
+                className={errors.description && touched.description ? "border-[#FF6B6B]" : ""}
+                data-testid="course-new-desc"
+              />
+              {errors.description && touched.description && (
+                <p className="text-[#FF6B6B] text-xs mt-1 font-medium">{errors.description}</p>
+              )}
             </div>
             <div>
               <label className="label-caps block mb-1.5">Color de portada</label>

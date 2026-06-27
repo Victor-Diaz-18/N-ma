@@ -33,8 +33,8 @@ class CourseService:
         await self.db.courses.insert_one(doc)
         return doc
 
-    async def list_courses(self, user_id: str) -> List[dict]:
-        courses = await self.db.courses.find({}, {"_id": 0}).to_list(500)
+    async def list_courses(self, user_id: str, skip: int = 0, limit: int = 12) -> List[dict]:
+        courses = await self.db.courses.find({}, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
         for c in courses:
             c["student_count"] = await self.db.enrollments.count_documents(
                 {"course_id": c["id"]}
@@ -45,6 +45,9 @@ class CourseService:
                 )
             )
         return courses
+
+    async def count_courses(self) -> int:
+        return await self.db.courses.count_documents({})
 
     async def get_my_courses(self, user_id: str, role: str) -> List[dict]:
         if role == "teacher":

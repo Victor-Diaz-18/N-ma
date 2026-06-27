@@ -55,13 +55,17 @@ export function useLeaderboard() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
 
-  const loadLeaderboard = useCallback(async () => {
+  const loadLeaderboard = useCallback(async (p = 1) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await api.get("/leaderboard");
-      setRows(data);
+      const { data } = await api.get(`/leaderboard?page=${p}&limit=20`);
+      setRows(data.items);
+      setPages(data.pages);
+      setPage(p);
     } catch (e) {
       setError(e.response?.data?.detail || "Error al cargar ranking");
     } finally {
@@ -73,7 +77,7 @@ export function useLeaderboard() {
     loadLeaderboard();
   }, [loadLeaderboard]);
 
-  return { rows, loading, error, reload: loadLeaderboard };
+  return { rows, loading, error, reload: loadLeaderboard, page, pages };
 }
 
 export function useSubmissions() {

@@ -78,6 +78,9 @@ async def leaderboard(
     request: Request,
     auth: AuthService = Depends(get_auth_service),
     gamification: GamificationService = Depends(get_gamification_service),
+    page: int = 1,
+    limit: int = 20,
 ):
     user = await auth.get_current_user(request)
-    return await gamification.get_leaderboard(user["id"])
+    skip = (max(page, 1) - 1) * limit
+    return await gamification.get_leaderboard(user["id"], skip=skip, limit=limit)

@@ -38,9 +38,15 @@ async def list_courses(
     request: Request,
     auth: AuthService = Depends(get_auth_service),
     course_svc: CourseService = Depends(get_course_service),
+    page: int = 1,
+    limit: int = 12,
 ):
     user = await auth.get_current_user(request)
-    return await course_svc.list_courses(user["id"])
+    skip = (max(page, 1) - 1) * limit
+    items = await course_svc.list_courses(user["id"], skip=skip, limit=limit)
+    total = await course_svc.count_courses()
+    pages = max(1, (total + limit - 1) // limit)
+    return {"items": items, "total": total, "page": page, "pages": pages}
 
 
 @router.get("/courses/mine")
@@ -72,7 +78,20 @@ async def enroll(
     course_svc: CourseService = Depends(get_course_service),
 ):
     user = await auth.require_role(request, "student")
-    return await course_svc.enroll_student(course_id, user["id"])
+    result = await course_svc.enroll_student(course_id, user["id"])
+    if result.get("ok") and not result.get("already"):
+        from services.notification_service import NotificationService
+        from dependencies import get_db
+        notif_svc = NotificationService(get_db(request))
+        course = await get_db(request).courses.find_one({"id": course_id}, {"_id": 0})
+        if course:
+            await notif_svc.create(
+                user["id"],
+                "Inscripción exitosa",
+                f"Te inscribiste en {course['title']}",
+                f"/courses/{course_id}",
+            )
+    return result
 
 
 @router.delete("/courses/{course_id}")

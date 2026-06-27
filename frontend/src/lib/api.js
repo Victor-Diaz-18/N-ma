@@ -10,6 +10,13 @@ export const api = axios.create({
 
 // No need for Authorization header - backend uses HttpOnly cookies
 
+// Rate limit tracking
+let rateLimitRetryAfter = 0;
+
+export function isRateLimited() {
+  return Date.now() < rateLimitRetryAfter;
+}
+
 // Cache successful GETs, fall back to IndexedDB on network failure
 api.interceptors.response.use(
   (response) => {
@@ -22,6 +29,17 @@ api.interceptors.response.use(
   },
   async (error) => {
     const config = error.config || {};
+
+    // Handle rate limiting (429)
+    if (error.response?.status === 429) {
+      const retryAfter = error.response.headers?.["retry-after"];
+      const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 30000;
+      rateLimitRetryAfter = Date.now() + waitMs;
+      const msg = `Demasiadas solicitudes. Espera ${Math.ceil(waitMs / 1000)} segundos.`;
+      error.displayMessage = msg;
+      return Promise.reject(error);
+    }
+
     const isNetwork = !error.response;
     if (isNetwork && config.method === "get") {
       const key = (config.url || "") + (config.params ? JSON.stringify(config.params) : "");

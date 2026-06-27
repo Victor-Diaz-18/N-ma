@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import { useTheme } from "../lib/theme";
 import OfflineIndicator from "./OfflineIndicator";
-import { LogOut, Trophy, User, LayoutDashboard, BookOpen, Menu, X } from "lucide-react";
+import NotificationBell from "./NotificationBell";
+import { LogOut, Trophy, User, LayoutDashboard, BookOpen, Menu, X, Sun, Moon } from "lucide-react";
 
 const LOGO_URL = "/logo.svg";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { theme, toggle } = useTheme();
   const nav = useNavigate();
   const loc = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -50,6 +53,15 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2">
           <OfflineIndicator />
+          <NotificationBell />
+          <button
+            onClick={toggle}
+            className="px-2 py-1.5 bg-white nb-border nb-press"
+            title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
+            data-testid="theme-toggle"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[#A5D6A7] nb-border">
             <span className="font-mono text-xs font-bold" data-testid="nav-xp">{user.xp} XP</span>
             <span className="w-px h-4 bg-[#1F5A2A]" />

@@ -1,12 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { NBButton, NBBadge, NBCard } from "../components/nb";
-import { Trophy, BookOpen, Sparkles, ArrowRight, Star, Target, Users, Zap, Award, ChevronRight, Github, ExternalLink } from "lucide-react";
+import { useTheme } from "../lib/theme";
+import { Trophy, BookOpen, Sparkles, ArrowRight, Star, Target, Users, Zap, Award, ChevronRight, Github, ExternalLink, Sun, Moon } from "lucide-react";
 
 const LOGO_URL = "/logo.svg";
 const MARQUEE_WORDS = ["Aprende", "Enseña", "Sube de nivel", "Gana XP", "Desbloquea insignias", "Escala el ranking"];
 
 export default function Landing() {
+  const { theme, toggle } = useTheme();
+
   return (
     <div className="min-h-screen bg-[#F5F1E4] grain">
       {/* Top nav */}
@@ -18,7 +21,15 @@ export default function Landing() {
             <div className="label-caps text-[0.6rem] text-[#3E8E41]">Plantas & Bienestar</div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggle}
+            className="px-3 py-2 bg-white nb-border nb-press"
+            title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
+            data-testid="theme-toggle-landing"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
           <Link to="/login"><NBButton variant="ghost" data-testid="landing-login-btn">Entrar</NBButton></Link>
           <Link to="/register"><NBButton variant="dark" data-testid="landing-register-btn">Registrarse</NBButton></Link>
         </div>

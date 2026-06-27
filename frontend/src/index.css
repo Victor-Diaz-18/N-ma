@@ -146,40 +146,51 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 .dark body {
-  background: #141a14;
-  color: #c8e6c8;
+  background: #121a12;
+  color: #d0e8d0;
 }
 
-.dark .nb-border { border-color: #5a8a5e; }
-.dark .nb-shadow { box-shadow: 4px 4px 0 0 #3a5a3e; }
-.dark .nb-shadow-lg { box-shadow: 6px 6px 0 0 #3a5a3e; }
-.dark .nb-shadow-sm { box-shadow: 2px 2px 0 0 #3a5a3e; }
+.dark .nb-border { border-color: #6aaa6e; }
+.dark .nb-shadow { box-shadow: 4px 4px 0 0 #3a6a40; }
+.dark .nb-shadow-lg { box-shadow: 6px 6px 0 0 #3a6a40; }
+.dark .nb-shadow-sm { box-shadow: 2px 2px 0 0 #3a6a40; }
 
 .dark .grain {
-  background-image: radial-gradient(rgba(200,230,200,0.03) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(200,230,200,0.04) 1px, transparent 1px);
 }
 
-/* Dark mode overrides for hardcoded colors */
-.dark .bg-\[\#F5F1E4\] { background-color: #1a221a !important; }
-.dark .bg-white { background-color: #1e2a1e !important; }
-.dark .text-\[\#1F5A2A\] { color: #8BC34A !important; }
-.dark .text-\[\#3E5A3E\] { color: #a0c8a0 !important; }
-.dark .text-\[\#4A4A4A\] { color: #b0c8b0 !important; }
-.dark .bg-\[\#A5D6A7\] { background-color: #2d5a30 !important; }
-.dark .bg-\[\#8BC34A\] { background-color: #3a6a20 !important; }
+/* Dark mode — backgrounds */
+.dark .bg-\[\#F5F1E4\] { background-color: #121a12 !important; }
+.dark .bg-white { background-color: #1a2a1a !important; }
+.dark .bg-\[\#1F5A2A\] { background-color: #1e3e22 !important; }
+.dark .bg-\[\#A5D6A7\] { background-color: #2a5a30 !important; }
+.dark .bg-\[\#8BC34A\] { background-color: #4a8a30 !important; }
 .dark .bg-\[\#FF6B6B\] { background-color: #c04040 !important; }
-.dark .border-\[\#1F5A2A\] { border-color: #5a8a5e !important; }
-.dark .bg-\[\#1F5A2A\] { background-color: #2a4a2e !important; }
+.dark .bg-\[\#2a4a2e\] { background-color: #1a3020 !important; }
+.dark .bg-\[\#F5F1E4\]\/80 { background-color: rgba(18,26,18,0.8) !important; }
 
-/* Dark mode overrides for Landing new sections */
-.dark .bg-\[\#8BC34A\] { background-color: #3a6a20 !important; }
-.dark .text-white { color: #c8e6c8 !important; }
+/* Dark mode — text colors */
+.dark .text-\[\#1F5A2A\] { color: #8BC34A !important; }
+.dark .text-\[\#3E5A3E\] { color: #b0d8b0 !important; }
+.dark .text-\[\#3E8E41\] { color: #7ab87e !important; }
+.dark .text-\[\#4A4A4A\] { color: #c0d8c0 !important; }
+.dark .text-white { color: #e0f0e0 !important; }
+.dark .text-white\/80 { color: #b0d0b0 !important; }
 .dark .text-white\/70 { color: #a0c8a0 !important; }
-.dark .text-white\/60 { color: #8ab88a !important; }
-.dark .bg-\[\#2a4a2e\] { background-color: #1e3020 !important; }
+.dark .text-white\/60 { color: #90b890 !important; }
 
-/* Scrollbar dark mode */
+/* Dark mode — borders */
+.dark .border-\[\#1F5A2A\] { border-color: #6aaa6e !important; }
+
+/* Dark mode — NBCard variants */
+.dark .bg-\[\#FFFDE7\] { background-color: #1e2a1e !important; }
+.dark .bg-\[\#F3E5F5\] { background-color: #2a1e2e !important; }
+.dark .bg-\[\#E0F2F1\] { background-color: #1a2a2a !important; }
+.dark .bg-\[\#E8F5E9\] { background-color: #1a2a1e !important; }
+.dark .bg-\[\#FFF8E1\] { background-color: #2a2a1a !important; }
+
+/* Dark mode — scroll */
 .dark ::-webkit-scrollbar { width: 8px; }
-.dark ::-webkit-scrollbar-track { background: #1a221a; }
-.dark ::-webkit-scrollbar-thumb { background: #3a5a3e; border-radius: 4px; }
-.dark ::-webkit-scrollbar-thumb:hover { background: #5a8a5e; }
+.dark ::-webkit-scrollbar-track { background: #121a12; }
+.dark ::-webkit-scrollbar-thumb { background: #4a7a4e; border-radius: 4px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #6aaa6e; }

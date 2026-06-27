@@ -104,6 +104,22 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 .animate-marquee { animation: marquee 30s linear infinite; }
 
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.35s ease forwards; }
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in { animation: scale-in 0.3s ease forwards; }
+
+.page-enter {
+  animation: fade-in 0.3s ease forwards;
+}
+
 ::selection { background: #8BC34A; color: #1F5A2A; }
 
 /* Dark mode */
@@ -154,6 +170,13 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .dark .bg-\[\#FF6B6B\] { background-color: #c04040 !important; }
 .dark .border-\[\#1F5A2A\] { border-color: #5a8a5e !important; }
 .dark .bg-\[\#1F5A2A\] { background-color: #2a4a2e !important; }
+
+/* Dark mode overrides for Landing new sections */
+.dark .bg-\[\#8BC34A\] { background-color: #3a6a20 !important; }
+.dark .text-white { color: #c8e6c8 !important; }
+.dark .text-white\/70 { color: #a0c8a0 !important; }
+.dark .text-white\/60 { color: #8ab88a !important; }
+.dark .bg-\[\#2a4a2e\] { background-color: #1e3020 !important; }
 
 /* Scrollbar dark mode */
 .dark ::-webkit-scrollbar { width: 8px; }

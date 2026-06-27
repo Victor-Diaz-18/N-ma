@@ -76,7 +76,11 @@ agenthub/agents/youtube/db
 # Build caches
 .cache/
 
-memory/test_credentials.md
+memory/
+test_reports/
+test_result.md
+design_guidelines.json
+.gitconfig
 
 # Mobile development
 android-sdk/-e 

@@ -9,15 +9,14 @@
 </p>
 
 <p align="center">
-  <a href="https://numa-front.vercel.app">Ver Demo</a> ·
-  <a href="https://n-ma-ww9o.vercel.app/docs">API Docs</a> ·
+  <a href="https://numap.vercel.app">Ver Demo</a> ·
+  <a href="https://numap.vercel.app/docs">API Docs</a> ·
   <a href="#getting-started">Instalación Local</a>
 </p>
 
 <p align="center">
-  <a href="https://numa-front.vercel.app"><img src="https://img.shields.io/badge/Frontend-Deployed-000?logo=vercel&logoColor=white" alt="Frontend Deployed"/></a>
-  <a href="https://n-ma-ww9o.vercel.app/docs"><img src="https://img.shields.io/badge/Backend-Deployed-000?logo=vercel&logoColor=white" alt="Backend Deployed"/></a>
-  <a href="https://numa-front.vercel.app"><img src="https://img.shields.io/badge/Status-Online-brightgreen" alt="Status"/></a>
+  <a href="https://numap.vercel.app"><img src="https://img.shields.io/badge/Deployed-Vercel-000?logo=vercel&logoColor=white" alt="Deployed on Vercel"/></a>
+  <a href="https://numap.vercel.app"><img src="https://img.shields.io/badge/Status-Online-brightgreen" alt="Status"/></a>
 </p>
 
 <p align="center">
@@ -68,22 +67,24 @@ NUMA es una plataforma educativa donde los profesores crean cursos, suben recurs
 
 ```
 N-ma/
+├── api/
+│   └── index.py              # Entry point Vercel serverless (Python)
 ├── backend/
-│   ├── api/index.py          # Entry point Vercel serverless
 │   ├── server.py             # FastAPI app + startup events
 │   ├── config.py             # Pydantic Settings (env vars)
 │   ├── models/               # Pydantic schemas
 │   ├── services/             # Auth, gamificación, archivos, cursos
 │   ├── routes/               # Endpoints REST
-│   ├── middleware/            # Error handlers, rate limiter
-│   └── vercel.json           # Build config para Vercel
+│   └── middleware/            # Error handlers, rate limiter
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/            # Landing, Dashboard, Cursos, Quiz, etc.
 │   │   ├── components/       # UI reutilizable (nb-ui, Skeleton, etc.)
 │   │   ├── hooks/            # useCourses, useGamification
-│   │   └── lib/              # api.js, auth.js, offline.js
+│   │   └── lib/              # api.js, auth.js, offline.js, validations.js
 │   └── public/               # Logo, manifest, service worker
+├── requirements.txt          # Python dependencies (Vercel)
+├── vercel.json               # Build config (Python + static)
 ├── docker-compose.yml        # Desarrollo local con Docker
 └── .env.example              # Variables de entorno requeridas
 ```
@@ -161,25 +162,27 @@ CORS_ORIGINS=http://localhost:3000
 docker-compose up --build
 ```
 
-### Vercel
+### Vercel (producción)
 
 1. Conectar repositorio a Vercel
-2. Crear dos proyectos: frontend (Root: `frontend`) y backend (Root: `backend`)
-3. Configurar variables de entorno en cada proyecto
+2. Crear un único proyecto con Root vacío
+3. Configurar variables de entorno: `MONGO_URL`, `DB_NAME`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CORS_ORIGINS`
 4. Deploy automático al hacer push a `main`
 
-Ver [DEPLOY.md](DEPLOY.md) para guía detallada.
+El backend (FastAPI) y el frontend (React) se sirven desde un solo proyecto Vercel.
 
 ## Lo que aprendí
 
 - **Arquitectura fullstack** de principio a fin: diseño, desarrollo, testing y despliegue
-- **Comunicación cross-origin** segura entre frontend y backend en dominios diferentes
-- **Autenticación** con JWT y cookies HttpOnly para prevenir ataques XSS
+- **Despliegue unificado** de React + FastAPI en un solo proyecto Vercel (serverless)
+- **Autenticación** con JWT y cookies HttpOnly en mismo dominio
 - **Patrones de diseño** en Python: servicio, repositorio, inyección de dependencias
 - **React custom hooks** para separar lógica de presentación
 - **Modo offline** con service workers e IndexedDB para apps educativas
-- **Despliegue serverless** en Vercel con Python y React
 - **MongoDB** con Motor (async driver), GridFS para archivos, e índices para performance
+- **Validación** con Zod (frontend) y Pydantic V2 (backend)
+- **Formularios reutilizables** con hooks personalizados de validación
+- **Sistema de notificaciones** en tiempo real y paginación
 
 ## Licencia
 

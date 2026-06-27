@@ -79,6 +79,10 @@ agenthub/agents/youtube/db
 memory/
 test_reports/
 test_result.md
+test-results/
+playwright-report/
+blob-report/
+.playwright/
 design_guidelines.json
 .gitconfig
 

@@ -105,6 +105,14 @@ export default function Navbar() {
             <span className="font-mono text-xs font-bold">NV {user.level}</span>
           </div>
           <button
+            onClick={toggle}
+            className="w-full px-4 py-3 bg-white nb-border nb-press text-sm font-bold flex items-center justify-center gap-2"
+            data-testid="theme-toggle-mobile"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === "dark" ? "Modo claro" : "Modo oscuro"}
+          </button>
+          <button
             onClick={async () => { setMobileOpen(false); await logout(); nav("/login"); }}
             className="w-full px-4 py-3 bg-[#FF6B6B] text-white nb-border nb-press text-sm font-bold flex items-center justify-center gap-1"
           >

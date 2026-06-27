@@ -2,6 +2,24 @@
   "private": true,
   "name": "numa",
   "scripts": {
-    "build": "cd frontend && npm install --legacy-peer-deps && npm run build"
-  }
+    "build": "cd frontend && npm install --legacy-peer-deps && npm run build",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui"
+  },
+  "version": "1.0.0",
+  "description": "NUMA - Plataforma educativa gamificada",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Victor-Diaz-18/N-ma.git"
+  },
+  "keywords": [],
+  "author": "Victor Diaz",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  },
+  "bugs": {
+    "url": "https://github.com/Victor-Diaz-18/N-ma/issues"
+  },
+  "homepage": "https://github.com/Victor-Diaz-18/N-ma#readme"
 }

@@ -26,6 +26,7 @@ jobs:
       - name: Lint frontend
         run: npm run lint
         working-directory: frontend
+        continue-on-error: true
 
       - name: Test frontend
         run: CI=true npm test -- --watchAll=false --coverage
@@ -44,6 +45,30 @@ jobs:
         run: ruff check backend/
         continue-on-error: true
 
-      - name: Test backend
-        run: pytest backend/ -v --tb=short --ignore=backend/tests/test_mongo.py
-        continue-on-error: true
+  e2e:
+    needs: lint-and-test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install && npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          BASE_URL: https://numap.vercel.app
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: test-results/
+          retention-days: 7

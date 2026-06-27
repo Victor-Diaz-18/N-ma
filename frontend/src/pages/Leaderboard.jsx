@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { api } from "../lib/api";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge } from "../components/nb";
@@ -11,7 +11,7 @@ export default function Leaderboard() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const load = async (p = 1) => {
+  const load = useCallback(async (p = 1) => {
     setLoading(true);
     try {
       const { data } = await api.get(`/leaderboard?page=${p}&limit=20`);
@@ -21,9 +21,9 @@ export default function Leaderboard() {
       setPage(p);
     } catch (e) { /* ignore */ }
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { load(1); }, []);
+  useEffect(() => { load(1); }, [load]);
 
   return (
     <div className="min-h-screen bg-[#F5F1E4] grain">

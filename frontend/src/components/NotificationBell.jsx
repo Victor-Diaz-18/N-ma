@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { Bell } from "lucide-react";
@@ -9,19 +9,19 @@ export default function NotificationBell() {
   const [unread, setUnread] = useState(0);
   const ref = useRef(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const { data } = await api.get("/notifications");
       setNotifications(data.items);
       setUnread(data.unread_count);
     } catch (e) { /* ignore */ }
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
   useEffect(() => {
     const interval = setInterval(load, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     const handler = (e) => {

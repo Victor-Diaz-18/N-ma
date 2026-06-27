@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -21,7 +21,7 @@ export function Courses() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const load = async (p = page) => {
+  const load = useCallback(async (p = 1) => {
     setLoading(true);
     try {
       const { data } = await api.get(`/courses?page=${p}&limit=${PAGE_SIZE}`);
@@ -31,8 +31,8 @@ export function Courses() {
       setPage(p);
     } catch (e) { /* ignore */ }
     setLoading(false);
-  };
-  useEffect(() => { load(1); }, []);
+  }, []);
+  useEffect(() => { load(1); }, [load]);
 
   const enroll = async (id) => {
     try {

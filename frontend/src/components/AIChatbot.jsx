@@ -63,8 +63,8 @@ export default function AIChatbot({ courseId }) {
       {/* FAB */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full nb-shadow nb-press flex items-center justify-center"
-        style={s.fab}
+        className="w-14 h-14 rounded-full nb-shadow nb-press flex items-center justify-center"
+        style={{ ...s.fab, position: "fixed", bottom: "24px", right: "24px", zIndex: 9999 }}
         title="Dudas del curso"
       >
         {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
@@ -73,8 +73,8 @@ export default function AIChatbot({ courseId }) {
       {/* Chat Panel */}
       {open && (
         <div
-          className="fixed bottom-24 right-6 z-40 w-80 max-w-[calc(100vw-48px)] flex flex-col nb-border nb-shadow"
-          style={{ ...s.panel, height: "450px", borderWidth: 2 }}
+          className="w-80 max-w-[calc(100vw-48px)] flex flex-col nb-border nb-shadow"
+          style={{ ...s.panel, position: "fixed", bottom: "96px", right: "24px", zIndex: 9999, height: "450px", borderWidth: 2 }}
         >
           {/* Header */}
           <div className="flex items-center gap-2 p-3" style={s.header}>

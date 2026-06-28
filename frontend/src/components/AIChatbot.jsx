@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTheme } from "../lib/theme";
 import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
 import { api } from "../lib/api";
@@ -58,7 +59,7 @@ export default function AIChatbot({ courseId }) {
     }
   };
 
-  return (
+  return createPortal(
     <>
       {/* FAB */}
       <button
@@ -153,6 +154,7 @@ export default function AIChatbot({ courseId }) {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 }

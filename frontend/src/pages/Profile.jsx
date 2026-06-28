@@ -68,10 +68,10 @@ export default function Profile() {
               <h2 className="font-display font-black text-2xl uppercase text-[#1F5A2A] mb-4">Insignias</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                 {stats.badges.map((b) => (
-                  <div key={b.id} className={`nb-border p-4 text-center ${b.earned ? "nb-shadow" : "opacity-40"}`} style={{ background: b.earned ? b.color : "#fff" }} data-testid={`profile-badge-${b.id}`}>
-                    <Award className="w-8 h-8 mx-auto mb-1" strokeWidth={2.5} />
-                    <div className="font-display font-black text-sm leading-tight">{BADGE_NAMES_ES[b.id]?.name || b.name}</div>
-                    <div className="text-[0.65rem] mt-1">{BADGE_NAMES_ES[b.id]?.desc || b.description}</div>
+                  <div key={b.id} className={`nb-border p-4 text-center ${b.earned ? "nb-shadow" : "opacity-40"}`} style={{ background: b.earned ? b.color : (dark ? "#3f3f46" : "#d1d5db") }} data-testid={`profile-badge-${b.id}`}>
+                    <Award className="w-8 h-8 mx-auto mb-1" strokeWidth={2.5} style={{ color: b.earned ? "#fff" : (dark ? "#71717a" : "#9ca3af") }} />
+                    <div className="font-display font-black text-sm leading-tight" style={{ color: b.earned ? "#fff" : (dark ? "#d4d4d8" : "#374151") }}>{BADGE_NAMES_ES[b.id]?.name || b.name}</div>
+                    <div className="text-[0.65rem] mt-1" style={{ color: b.earned ? "#fff" : (dark ? "#a1a1aa" : "#6b7280") }}>{BADGE_NAMES_ES[b.id]?.desc || b.description}</div>
                   </div>
                 ))}
               </div>

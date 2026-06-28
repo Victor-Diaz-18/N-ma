@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
+import { useTheme } from "../lib/theme";
 import { useCourses } from "../hooks/useCourses";
 import { useStats, useUpcoming, useSubmissions } from "../hooks/useGamification";
 import Navbar from "../components/Navbar";
@@ -17,6 +18,8 @@ export default function Dashboard() {
 
 function StudentDashboard() {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const dark = theme === "dark";
   const { stats, loading: statsLoading } = useStats();
   const { courses, loading: coursesLoading } = useCourses();
   const { submissions, loading: submissionsLoading } = useSubmissions();
@@ -66,8 +69,8 @@ function StudentDashboard() {
             <div className="font-display font-black text-4xl">{stats?.earned_badges_count ?? 0} <span className="text-[#3E5A3E] text-xl">/ {stats?.badges?.length ?? 6}</span></div>
             <div className="grid grid-cols-6 gap-2 mt-4">
               {stats?.badges?.map((b) => (
-                <div key={b.id} className={`aspect-square nb-border flex items-center justify-center ${b.earned ? "" : "opacity-25"}`} style={{ background: b.earned ? b.color : "#fff" }} title={b.name} data-testid={`dash-badge-${b.id}`}>
-                  <Award className="w-6 h-6" strokeWidth={2.5} />
+                <div key={b.id} className={`aspect-square nb-border flex items-center justify-center ${b.earned ? "" : "opacity-40"}`} style={{ background: b.earned ? b.color : (dark ? "#3f3f46" : "#d1d5db") }} title={b.name} data-testid={`dash-badge-${b.id}`}>
+                  <Award className="w-6 h-6" strokeWidth={2.5} style={{ color: b.earned ? "#fff" : (dark ? "#71717a" : "#9ca3af") }} />
                 </div>
               ))}
             </div>
@@ -150,26 +153,28 @@ function StudentDashboard() {
             <NBCard className="p-6 text-sm text-[#3E5A3E]">Aún no tienes entregas — envía una para ganar XP.</NBCard>
           ) : (
             <NBCard className="p-0 overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-[#1F5A2A] text-white">
-                  <tr className="text-left label-caps">
-                    <th className="px-4 py-3">Actividad</th>
-                    <th className="px-4 py-3">Tipo</th>
-                    <th className="px-4 py-3">Estado</th>
-                    <th className="px-4 py-3 text-right">Puntaje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissions.slice(0, 6).map((s) => (
-                    <tr key={s.id} className="border-t-2 border-[#1F5A2A]" data-testid={`dash-submission-${s.id}`}>
-                      <td className="px-4 py-3 font-bold">{s.activity_title}</td>
-                      <td className="px-4 py-3"><NBBadge color={s.type === "quiz" ? "#A5D6A7" : "#C5E1A5"}>{s.type === "quiz" ? "quiz" : "tarea"}</NBBadge></td>
-                      <td className="px-4 py-3"><NBBadge color={s.status === "graded" ? "#2E8B7F" : "#8BC34A"}>{s.status === "graded" ? "calificado" : "enviado"}</NBBadge></td>
-                      <td className="px-4 py-3 text-right font-mono font-bold">{s.score != null ? `${s.score}/${s.max_points}` : "—"}</td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left label-caps" style={{ background: "#1F5A2A", color: "#fff" }}>
+                      <th className="px-4 py-3">Actividad</th>
+                      <th className="px-4 py-3">Tipo</th>
+                      <th className="px-4 py-3">Estado</th>
+                      <th className="px-4 py-3 text-right">Puntaje</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {submissions.slice(0, 6).map((s) => (
+                      <tr key={s.id} className="border-t-2 border-[#1F5A2A]" data-testid={`dash-submission-${s.id}`}>
+                        <td className="px-4 py-3 font-bold">{s.activity_title}</td>
+                        <td className="px-4 py-3"><NBBadge color={s.type === "quiz" ? "#A5D6A7" : "#C5E1A5"}>{s.type === "quiz" ? "quiz" : "tarea"}</NBBadge></td>
+                        <td className="px-4 py-3"><NBBadge color={s.status === "graded" ? "#2E8B7F" : "#8BC34A"}>{s.status === "graded" ? "calificado" : "enviado"}</NBBadge></td>
+                        <td className="px-4 py-3 text-right font-mono font-bold">{s.score != null ? `${s.score}/${s.max_points}` : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </NBCard>
           )}
         </section>

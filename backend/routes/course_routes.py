@@ -253,11 +253,11 @@ async def list_students(
 
     students = []
     for e in enrollments:
-        student = await db.users.find_one({"id": e["user_id"]}, {"_id": 0, "password": 0})
+        student = await db.users.find_one({"id": e["student_id"]}, {"_id": 0, "password": 0})
         if not student:
             continue
 
-        submissions = await db.submissions.find({"student_id": e["user_id"]}).to_list(200)
+        submissions = await db.submissions.find({"student_id": e["student_id"]}).to_list(200)
         course_submissions = [s for s in submissions if any(a["id"] == s.get("activity_id") for a in activities)]
 
         submitted_activity_ids = {s.get("activity_id") for s in course_submissions}
@@ -271,7 +271,7 @@ async def list_students(
             "id": student["id"],
             "name": student.get("name", ""),
             "email": student.get("email", ""),
-            "enrolled_at": e.get("created_at", ""),
+            "enrolled_at": e.get("enrolled_at", ""),
             "submissions_count": len(course_submissions),
             "graded_count": len(graded),
             "total_score": total_score,
@@ -317,11 +317,11 @@ async def export_students(
         cell.fill = openpyxl.styles.PatternFill(start_color="1F5A2A", end_color="1F5A2A", fill_type="solid")
 
     for e in enrollments:
-        student = await db.users.find_one({"id": e["user_id"]}, {"_id": 0, "password": 0})
+        student = await db.users.find_one({"id": e["student_id"]}, {"_id": 0, "password": 0})
         if not student:
             continue
 
-        submissions = await db.submissions.find({"student_id": e["user_id"]}).to_list(200)
+        submissions = await db.submissions.find({"student_id": e["student_id"]}).to_list(200)
         course_submissions = [s for s in submissions if any(a["id"] == s.get("activity_id") for a in activities)]
 
         submitted_activity_ids = {s.get("activity_id") for s in course_submissions}

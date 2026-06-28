@@ -23,6 +23,7 @@ from services.gamification_service import GamificationService
 from services.file_service import FileService
 from services.course_service import CourseService
 from services.notification_service import NotificationService
+from services.ai_service import AIService
 from middleware.error_handler import setup_error_handlers
 from middleware.rate_limiter import setup_rate_limiter, limiter
 from routes.auth_routes import router as auth_router
@@ -31,6 +32,7 @@ from routes.activity_routes import router as activity_router
 from routes.gamification_routes import router as gamification_router
 from routes.file_routes import router as file_router
 from routes.notification_routes import router as notification_router
+from routes.ai_routes import router as ai_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("numa")
@@ -50,6 +52,7 @@ gamification_service = GamificationService(db)
 file_service = FileService(db)
 course_service = CourseService(db, gamification_service)
 notification_service = NotificationService(db)
+ai_service = AIService()
 
 app.state.db = db
 app.state.auth_service = auth_service
@@ -57,6 +60,7 @@ app.state.gamification_service = gamification_service
 app.state.file_service = file_service
 app.state.course_service = course_service
 app.state.notification_service = notification_service
+app.state.ai_service = ai_service
 
 app.include_router(auth_router)
 app.include_router(course_router)
@@ -64,6 +68,7 @@ app.include_router(activity_router)
 app.include_router(gamification_router)
 app.include_router(file_router)
 app.include_router(notification_router)
+app.include_router(ai_router)
 
 app.add_middleware(
     CORSMiddleware,

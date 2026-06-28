@@ -51,7 +51,7 @@ export function NBButton({ children, className = "", variant = "primary", ...pro
 
 export function NBBadge({ children, color = "#8BC34A", className = "" }) {
   return (
-    <span className={`inline-block px-2 py-0.5 nb-border text-xs font-bold uppercase tracking-wider ${className}`} style={{ background: color, color: "#1F5A2A" }}>
+    <span className={`inline-block px-2 py-0.5 nb-border text-xs font-bold uppercase tracking-wider ${className}`} style={{ background: color, color: "#fff" }}>
       {children}
     </span>
   );

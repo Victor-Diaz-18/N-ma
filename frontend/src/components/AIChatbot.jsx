@@ -61,11 +61,17 @@ export default function AIChatbot({ courseId }) {
   };
 
   const avatarStyle = {
-    width: "100%",
-    height: "100%",
+    width: "150%",
+    height: "150%",
     objectFit: "cover",
-    objectPosition: "left center",
-    borderRadius: "50%",
+    objectPosition: "8% 30%",
+  };
+
+  const avatarSmallStyle = {
+    width: "150%",
+    height: "150%",
+    objectFit: "cover",
+    objectPosition: "8% 30%",
   };
 
   return createPortal(
@@ -75,14 +81,14 @@ export default function AIChatbot({ courseId }) {
         onClick={() => setOpen(!open)}
         className="w-14 h-14 rounded-full nb-shadow nb-press overflow-hidden"
         style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999 }}
-        title="Dudas del curso"
+        title="Pregúntale a Roquie"
       >
         {open ? (
           <div className="w-full h-full flex items-center justify-center" style={{ background: "#8BC34A", color: "#18181b" }}>
             <X className="w-6 h-6" />
           </div>
         ) : (
-          <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
+          <img src={MASCOT_SRC} alt="Roquie" style={avatarStyle} />
         )}
       </button>
 
@@ -94,11 +100,11 @@ export default function AIChatbot({ courseId }) {
         >
           {/* Header */}
           <div className="flex items-center gap-2 p-3" style={s.header}>
-            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-              <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
+            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border-2" style={{ borderColor: "#18181b" }}>
+              <img src={MASCOT_SRC} alt="Roquie" style={avatarSmallStyle} />
             </div>
             <span className="font-extrabold text-sm uppercase tracking-wide flex-1">
-              Asistente IA
+              Roquie
             </span>
             <button onClick={() => setOpen(false)} className="nb-press p-1">
               <X className="w-4 h-4" />
@@ -109,17 +115,17 @@ export default function AIChatbot({ courseId }) {
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {messages.length === 0 && (
               <div className="text-center text-sm font-medium pt-4" style={{ color: dark ? "#71717a" : "#9ca3af" }}>
-                <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden">
-                  <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
+                <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden border-2" style={{ borderColor: "#8BC34A" }}>
+                  <img src={MASCOT_SRC} alt="Roquie" style={avatarStyle} />
                 </div>
-                ¡Hola! Soy tu asistente de plantas medicinales. Pregúntame lo que quieras sobre el contenido de este curso.
+                ¡Hola! Soy <strong>Roquie</strong>, tu guía de plantas medicinales. Pregúntame lo que quieras sobre el contenido de este curso.
               </div>
             )}
             {messages.map((m, i) => (
               <div key={i} className="flex gap-2" style={{ justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
                 {m.role === "bot" && (
-                  <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 mt-1">
-                    <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
+                  <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 mt-1 border-2" style={{ borderColor: "#8BC34A" }}>
+                    <img src={MASCOT_SRC} alt="Roquie" style={avatarSmallStyle} />
                   </div>
                 )}
                 <div
@@ -137,8 +143,8 @@ export default function AIChatbot({ courseId }) {
             ))}
             {loading && (
               <div className="flex gap-2 items-start">
-                <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
-                  <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
+                <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 border-2" style={{ borderColor: "#8BC34A" }}>
+                  <img src={MASCOT_SRC} alt="Roquie" style={avatarSmallStyle} />
                 </div>
                 <div className="px-3 py-2" style={{ background: dark ? "#3f3f46" : "#f3f4f6" }}>
                   <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#8BC34A" }} />

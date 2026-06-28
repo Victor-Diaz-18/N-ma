@@ -32,7 +32,7 @@ export default function OfflineIndicator() {
 
   if (online && pending === 0) {
     return (
-      <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 nb-border bg-[#C5E1A5]" data-testid="offline-indicator-online" title="En línea">
+      <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 nb-border bg-[#C5E1A5]" data-testid="offline-indicator-online" title="En línea" style={{ color: "#1F5A2A" }}>
         <Wifi className="w-3.5 h-3.5" strokeWidth={2.5} />
         <span className="font-mono text-[0.65rem] font-bold">EN LÍNEA</span>
       </div>

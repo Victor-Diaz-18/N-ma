@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, API } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import Navbar from "../components/Navbar";
+import AIChatbot from "../components/AIChatbot";
 import { NBCard, NBButton, NBBadge } from "../components/nb";
 import ReactMarkdown from "react-markdown";
 import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, Pencil, Download, HardDriveDownload, Check } from "lucide-react";
@@ -217,6 +218,9 @@ export default function CourseDetail() {
           </div>
         )}
       </main>
+      {user?.role === "student" && course?.is_enrolled && (
+        <AIChatbot courseId={id} />
+      )}
     </div>
   );
 }

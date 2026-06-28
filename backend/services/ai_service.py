@@ -145,3 +145,38 @@ Genera la tarea ahora:"""
             result["questions"] = validated[:num_questions]
 
         return result
+
+    async def chat(self, course_title: str, course_description: str, lessons: list[dict], question: str) -> str:
+        if not self.model:
+            raise ValueError("GEMINI_API_KEY no configurada")
+
+        lessons_text = ""
+        for i, lesson in enumerate(lessons, 1):
+            title = lesson.get("title", f"Lección {i}")
+            content = lesson.get("content", "")
+            lessons_text += f"\n--- Lección {i}: {title} ---\n{content}\n"
+
+        context = lessons_text if lessons_text else "No hay contenido detallado de lecciones disponible."
+
+        prompt = f"""Eres un asistente educativo experto. Un estudiante tiene una duda sobre un curso.
+
+CURSO: {course_title}
+DESCRIPCIÓN: {course_description}
+
+CONTENIDO DEL CURSO:
+{context}
+
+REGLAS:
+1. Responde SOLO basándote en el contenido del curso
+2. Si la pregunta no tiene relación con el curso, indica que está fuera del alcance
+3. Sé claro, conciso y didáctico
+4. Usa ejemplos del contenido cuando sea posible
+5. Responde en español
+6. No inventes información que no esté en el contenido del curso
+
+PREGUNTA DEL ESTUDIANTE: {question}
+
+RESPUESTA:"""
+
+        response = self.model.generate_content(prompt)
+        return response.text.strip()

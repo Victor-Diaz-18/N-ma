@@ -4,7 +4,7 @@ import { api, API } from "../lib/api";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBInput, NBTextarea } from "../components/nb";
 import AIGenerateModal from "../components/AIGenerateModal";
-import { Plus, Trash2, FileText, LinkIcon, BookOpen, ClipboardList, Upload, Star, Download, Sparkles } from "lucide-react";
+import { Plus, Trash2, FileText, LinkIcon, BookOpen, ClipboardList, Upload, Star, Download, Sparkles, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CourseManage() {
@@ -38,6 +38,7 @@ export default function CourseManage() {
     { id: "resources", label: "Recursos", icon: FileText },
     { id: "activities", label: "Actividades", icon: ClipboardList },
     { id: "submissions", label: `Entregas (${submissions.length})`, icon: Star },
+    { id: "students", label: "Estudiantes", icon: Users },
   ];
 
   return (
@@ -65,6 +66,7 @@ export default function CourseManage() {
         {tab === "resources" && <ResourcesPanel courseId={id} resources={resources} reload={loadAll} />}
         {tab === "activities" && <ActivitiesPanel courseId={id} activities={activities} reload={loadAll} />}
         {tab === "submissions" && <SubmissionsPanel courseId={id} submissions={submissions} reload={loadAll} />}
+        {tab === "students" && <StudentsPanel courseId={id} activities={activities} />}
       </main>
     </div>
   );
@@ -320,7 +322,7 @@ function SubmissionsPanel({ courseId, submissions, reload }) {
               <NBButton variant="primary" onClick={() => startGrade(s)} data-testid={`grade-btn-${s.id}`}>{s.status === "graded" ? "Re-calificar" : "Calificar"}</NBButton>
             )}
           </div>
-          {grading?.id === s.id && (
+            {grading?.id === s.id && (
             <div className="mt-3 nb-border bg-[#8BC34A] p-3 space-y-2">
               <NBInput type="number" placeholder={`Puntaje / ${s.max_points}`} value={score} onChange={(e) => setScore(e.target.value)} data-testid="grade-score-input" />
               <NBTextarea placeholder="Retroalimentación" rows={3} value={feedback} onChange={(e) => setFeedback(e.target.value)} data-testid="grade-feedback-input" />
@@ -332,6 +334,97 @@ function SubmissionsPanel({ courseId, submissions, reload }) {
           )}
         </NBCard>
       ))}
+    </div>
+  );
+}
+
+function StudentsPanel({ courseId, activities }) {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await api.get(`/courses/${courseId}/students`);
+        setStudents(data);
+      } catch (e) {
+        toast.error("Error al cargar estudiantes");
+      }
+      setLoading(false);
+    };
+    load();
+  }, [courseId]);
+
+  const exportExcel = () => {
+    window.open(`${API}/courses/${courseId}/students/export`, "_blank");
+  };
+
+  if (loading) return <NBCard className="p-6 text-center">Cargando estudiantes...</NBCard>;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between items-center">
+        <p className="label-caps">{students.length} estudiante{students.length !== 1 ? "s" : ""} inscrito{students.length !== 1 ? "s" : ""}</p>
+        {students.length > 0 && (
+          <NBButton variant="dark" onClick={exportExcel} data-testid="export-students-btn">
+            <Download className="inline w-4 h-4 mr-1" /> Exportar Excel
+          </NBButton>
+        )}
+      </div>
+
+      {students.length === 0 ? (
+        <NBCard className="p-6 text-center">Aún no hay estudiantes inscritos.</NBCard>
+      ) : (
+        <NBCard className="p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ background: "#1F5A2A", color: "#fff" }}>
+                  <th className="px-4 py-3 text-left label-caps">Nombre</th>
+                  <th className="px-4 py-3 text-center label-caps">Notas</th>
+                  <th className="px-4 py-3 text-center label-caps">Promedio</th>
+                  <th className="px-4 py-3 text-center label-caps">Faltantes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((s) => (
+                  <React.Fragment key={s.id}>
+                    <tr className="border-t-2 border-[#1F5A2A] cursor-pointer hover:bg-[#f0f0f0]" onClick={() => setExpanded(expanded === s.id ? null : s.id)}>
+                      <td className="px-4 py-3 font-bold">{s.name}</td>
+                      <td className="px-4 py-3 text-center">{s.total_score}/{s.max_possible}</td>
+                      <td className="px-4 py-3 text-center">
+                        <NBBadge color={s.average >= 70 ? "#8BC34A" : s.average >= 50 ? "#FFD93D" : "#FF6B6B"}>
+                          {s.average}%
+                        </NBBadge>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {s.missing_count > 0 ? (
+                          <NBBadge color="#FF6B6B">{s.missing_count}</NBBadge>
+                        ) : (
+                          <NBBadge color="#8BC34A">0</NBBadge>
+                        )}
+                      </td>
+                    </tr>
+                    {expanded === s.id && s.missing_activities.length > 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-3 bg-gray-50">
+                          <p className="text-xs font-bold uppercase tracking-wide text-red-600 mb-1">Actividades faltantes:</p>
+                          <ul className="list-disc list-inside text-sm">
+                            {s.missing_activities.map((a) => (
+                              <li key={a.id}>{a.title} <span className="text-gray-500">({a.type})</span></li>
+                            ))}
+                          </ul>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </NBCard>
+      )}
     </div>
   );
 }

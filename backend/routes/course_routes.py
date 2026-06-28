@@ -232,3 +232,127 @@ async def delete_resource(
 
     await db.resources.delete_one({"id": resource_id})
     return {"ok": True}
+
+
+@router.get("/courses/{course_id}/students")
+async def list_students(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db: AsyncIOMotorDatabase = request.app.state.db
+
+    course = await db.courses.find_one({"id": course_id})
+    if not course or course["teacher_id"] != user["id"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Not your course")
+
+    enrollments = await db.enrollments.find({"course_id": course_id}).to_list(200)
+    activities = await db.activities.find({"course_id": course_id}).to_list(200)
+
+    students = []
+    for e in enrollments:
+        student = await db.users.find_one({"id": e["user_id"]}, {"_id": 0, "password": 0})
+        if not student:
+            continue
+
+        submissions = await db.submissions.find({"student_id": e["user_id"]}).to_list(200)
+        course_submissions = [s for s in submissions if any(a["id"] == s.get("activity_id") for a in activities)]
+
+        submitted_activity_ids = {s.get("activity_id") for s in course_submissions}
+        missing = [a for a in activities if a["id"] not in submitted_activity_ids]
+
+        graded = [s for s in course_submissions if s.get("status") == "graded"]
+        total_score = sum(s.get("score", 0) for s in graded)
+        max_possible = sum(a.get("max_points", 100) for a in activities if a["id"] in {s.get("activity_id") for s in graded})
+
+        students.append({
+            "id": student["id"],
+            "name": student.get("name", ""),
+            "email": student.get("email", ""),
+            "enrolled_at": e.get("created_at", ""),
+            "submissions_count": len(course_submissions),
+            "graded_count": len(graded),
+            "total_score": total_score,
+            "max_possible": max_possible,
+            "average": round(total_score / max_possible * 100, 1) if max_possible > 0 else 0,
+            "missing_count": len(missing),
+            "missing_activities": [{"id": a["id"], "title": a["title"], "type": a["type"]} for a in missing],
+        })
+
+    return students
+
+
+@router.get("/courses/{course_id}/students/export")
+async def export_students(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db: AsyncIOMotorDatabase = request.app.state.db
+
+    course = await db.courses.find_one({"id": course_id})
+    if not course or course["teacher_id"] != user["id"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Not your course")
+
+    from fastapi.responses import StreamingResponse
+    import openpyxl
+    import io
+
+    enrollments = await db.enrollments.find({"course_id": course_id}).to_list(200)
+    activities = await db.activities.find({"course_id": course_id}).to_list(200)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Estudiantes"
+
+    headers = ["Nombre", "Notas", "Promedio (%)", "Faltantes", "Actividades Faltantes"]
+    ws.append(headers)
+
+    for cell in ws[1]:
+        cell.font = openpyxl.styles.Font(bold=True, color="FFFFFF")
+        cell.fill = openpyxl.styles.PatternFill(start_color="1F5A2A", end_color="1F5A2A", fill_type="solid")
+
+    for e in enrollments:
+        student = await db.users.find_one({"id": e["user_id"]}, {"_id": 0, "password": 0})
+        if not student:
+            continue
+
+        submissions = await db.submissions.find({"student_id": e["user_id"]}).to_list(200)
+        course_submissions = [s for s in submissions if any(a["id"] == s.get("activity_id") for a in activities)]
+
+        submitted_activity_ids = {s.get("activity_id") for s in course_submissions}
+        missing = [a for a in activities if a["id"] not in submitted_activity_ids]
+
+        graded = [s for s in course_submissions if s.get("status") == "graded"]
+        total_score = sum(s.get("score", 0) for s in graded)
+        max_possible = sum(a.get("max_points", 100) for a in activities if a["id"] in {s.get("activity_id") for s in graded})
+        average = round(total_score / max_possible * 100, 1) if max_possible > 0 else 0
+
+        missing_titles = ", ".join([a["title"] for a in missing]) if missing else "Ninguna"
+
+        ws.append([
+            student.get("name", ""),
+            f"{total_score}/{max_possible}",
+            average,
+            len(missing),
+            missing_titles,
+        ])
+
+    for col in ws.columns:
+        max_length = max(len(str(cell.value or "")) for cell in col)
+        ws.column_dimensions[col[0].column_letter].width = min(max_length + 2, 40)
+
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    filename = f"estudiantes_{course.get('title', 'curso')}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTheme } from "../lib/theme";
 import { X, Sparkles, FileText, ClipboardCheck, BookOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
@@ -10,13 +11,32 @@ const ACTIVITY_TYPES = [
 ];
 
 export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
-  const [step, setStep] = useState("type"); // type | loading | preview
+  const { theme } = useTheme();
+  const dark = theme === "dark";
+
+  const [step, setStep] = useState("type");
   const [activityType, setActivityType] = useState("quiz");
   const [numQuestions, setNumQuestions] = useState(5);
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+
+  const s = {
+    modal: { background: dark ? "#27272a" : "#fff" },
+    card: { background: dark ? "#3f3f46" : "#fff" },
+    cardHover: { background: dark ? "#52525b" : "#f9fafb" },
+    input: { background: dark ? "#3f3f46" : "#fff", color: dark ? "#fafafa" : "#1a1a1a" },
+    textPrimary: { color: dark ? "#fafafa" : "#1a1a1a" },
+    textSecondary: { color: dark ? "#a1a1aa" : "#4A4A4A" },
+    textMuted: { color: dark ? "#71717a" : "#6b7280" },
+    border: { borderColor: dark ? "#52525b" : "#000" },
+    borderLight: { borderColor: dark ? "#52525b" : "#e5e7eb" },
+    divider: { borderColor: dark ? "#3f3f46" : "#f3f4f6" },
+    previewQ: { background: dark ? "#18181b" : "#f9fafb", borderColor: dark ? "#3f3f46" : "#e5e7eb" },
+    previewOpt: { background: dark ? "#27272a" : "#fff", borderColor: dark ? "#3f3f46" : "#e5e7eb" },
+    previewNum: { background: dark ? "#fafafa" : "#000", color: dark ? "#18181b" : "#fff" },
+  };
 
   const generate = async () => {
     setStep("loading");
@@ -32,7 +52,10 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
       setDescription(data.description || "");
       setStep("preview");
     } catch (e) {
-      const msg = e.response?.data?.detail || "Error al generar actividad";
+      const detail = e.response?.data?.detail || "Error al generar actividad";
+      const msg = e.response?.status === 429
+        ? "Límite de solicitudes alcanzado. Espera unos minutos e intenta de nuevo."
+        : detail;
       setError(msg);
       setStep("type");
       toast.error(msg);
@@ -49,7 +72,6 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
       xp_reward: 50,
       status,
     };
-
     if (activityType === "quiz" || activityType === "exam") {
       payload.quiz_questions = (preview.questions || []).map((q) => ({
         question: q.question,
@@ -57,7 +79,6 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
         correct_index: Number(q.correct_index),
       }));
     }
-
     try {
       await api.post(`/courses/${courseId}/activities`, payload);
       toast.success(status === "draft" ? "Guardado como borrador" : "Actividad publicada");
@@ -66,10 +87,6 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
     } catch (e) {
       toast.error(e.response?.data?.detail || "Error al guardar");
     }
-  };
-
-  const regenerate = () => {
-    generate();
   };
 
   const reset = () => {
@@ -85,17 +102,17 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white nb-border nb-shadow w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div style={s.modal} className="nb-border nb-shadow w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b-2 border-black">
+        <div className="flex items-center justify-between p-5" style={{ ...s.border, borderBottomWidth: 2, borderBottomStyle: "solid" }}>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            <h2 className="text-xl font-extrabold uppercase tracking-wide">
+            <Sparkles className="w-5 h-5" style={s.textPrimary} />
+            <h2 className="text-xl font-extrabold uppercase tracking-wide" style={s.textPrimary}>
               Generar actividad con IA
             </h2>
           </div>
-          <button onClick={reset} className="nb-press p-1 hover:bg-gray-100">
-            <X className="w-5 h-5" />
+          <button onClick={reset} className="nb-press p-1" style={{ background: dark ? "#3f3f46" : "#f3f4f6" }}>
+            <X className="w-5 h-5" style={s.textPrimary} />
           </button>
         </div>
 
@@ -103,12 +120,12 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
         {step === "type" && (
           <div className="p-5 space-y-4">
             {error && (
-              <div className="bg-red-50 border-2 border-red-400 p-3 text-sm text-red-700 font-medium">
+              <div className="border-2 border-red-400 p-3 text-sm font-medium" style={{ background: dark ? "#3f1111" : "#fef2f2", color: dark ? "#fca5a5" : "#991b1b" }}>
                 {error}
               </div>
             )}
 
-            <p className="font-bold text-sm uppercase tracking-wide">
+            <p className="font-bold text-sm uppercase tracking-wide" style={s.textPrimary}>
               Tipo de actividad:
             </p>
 
@@ -120,17 +137,15 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
                   <button
                     key={t.id}
                     onClick={() => setActivityType(t.id)}
-                    className={`p-4 nb-border nb-press text-left ${
-                      selected
-                        ? "bg-[#C5E1A5] border-2 border-black"
-                        : "bg-white hover:bg-gray-50"
-                    }`}
+                    className="p-4 nb-border nb-press text-left"
+                    style={selected
+                      ? { background: "#C5E1A5", borderColor: "#000", borderWidth: 2 }
+                      : { ...s.card, ...s.border }
+                    }
                   >
-                    <Icon className="w-6 h-6 mb-2" />
-                    <div className="font-extrabold text-lg">{t.label}</div>
-                    <div className="text-xs font-medium text-gray-600 mt-1">
-                      {t.desc}
-                    </div>
+                    <Icon className="w-6 h-6 mb-2" style={s.textPrimary} />
+                    <div className="font-extrabold text-lg" style={s.textPrimary}>{t.label}</div>
+                    <div className="text-xs font-medium mt-1" style={s.textMuted}>{t.desc}</div>
                   </button>
                 );
               })}
@@ -138,18 +153,17 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
 
             {(activityType === "quiz" || activityType === "exam") && (
               <div>
-                <label className="block text-xs font-extrabold uppercase tracking-wide mb-1">
+                <label className="block text-xs font-extrabold uppercase tracking-wide mb-1" style={s.textPrimary}>
                   Número de preguntas
                 </label>
                 <select
                   value={numQuestions}
                   onChange={(e) => setNumQuestions(Number(e.target.value))}
-                  className="w-full px-3 py-2 nb-border bg-white font-bold"
+                  className="w-full px-3 py-2 nb-border font-bold"
+                  style={s.input}
                 >
                   {[3, 5, 7, 10, 15, 20].map((n) => (
-                    <option key={n} value={n}>
-                      {n} preguntas
-                    </option>
+                    <option key={n} value={n}>{n} preguntas</option>
                   ))}
                 </select>
               </div>
@@ -157,7 +171,11 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
 
             <button
               onClick={generate}
-              className="w-full bg-black text-white py-3 nb-border nb-press font-extrabold uppercase tracking-wide text-lg flex items-center justify-center gap-2"
+              className="w-full py-3 nb-border nb-press font-extrabold uppercase tracking-wide text-lg flex items-center justify-center gap-2"
+              style={dark
+                ? { background: "#8BC34A", color: "#18181b", borderColor: "#000" }
+                : { background: "#1a1a1a", color: "#fff", borderColor: "#000" }
+              }
             >
               <Sparkles className="w-5 h-5" /> Generar
             </button>
@@ -167,11 +185,11 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
         {/* Step: Loading */}
         {step === "loading" && (
           <div className="p-10 flex flex-col items-center justify-center gap-4">
-            <Loader2 className="w-12 h-12 animate-spin" />
-            <p className="font-extrabold text-lg uppercase tracking-wide">
+            <Loader2 className="w-12 h-12 animate-spin" style={{ color: "#8BC34A" }} />
+            <p className="font-extrabold text-lg uppercase tracking-wide" style={s.textPrimary}>
               Generando contenido...
             </p>
-            <p className="text-sm text-gray-500 font-medium">
+            <p className="text-sm font-medium" style={s.textMuted}>
               La IA está creando tu actividad
             </p>
           </div>
@@ -181,25 +199,27 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
         {step === "preview" && preview && (
           <div className="p-5 space-y-4">
             <div>
-              <label className="block text-xs font-extrabold uppercase tracking-wide mb-1">
+              <label className="block text-xs font-extrabold uppercase tracking-wide mb-1" style={s.textPrimary}>
                 Título
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 nb-border bg-white font-bold"
+                className="w-full px-3 py-2 nb-border font-bold"
+                style={s.input}
                 placeholder="Título de la actividad"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold uppercase tracking-wide mb-1">
+              <label className="block text-xs font-extrabold uppercase tracking-wide mb-1" style={s.textPrimary}>
                 Descripción
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 nb-border bg-white font-bold min-h-[80px] resize-y"
+                className="w-full px-3 py-2 nb-border font-bold min-h-[80px] resize-y"
+                style={s.input}
                 placeholder="Descripción de la actividad"
               />
             </div>
@@ -207,13 +227,13 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
             {/* Quiz/Exam preview */}
             {(activityType === "quiz" || activityType === "exam") && preview.questions && (
               <div className="space-y-3">
-                <p className="text-sm font-extrabold uppercase tracking-wide">
+                <p className="text-sm font-extrabold uppercase tracking-wide" style={s.textPrimary}>
                   {preview.questions.length} preguntas generadas
                 </p>
                 {preview.questions.map((q, i) => (
-                  <div key={i} className="bg-gray-50 border-2 border-gray-200 p-3">
-                    <p className="font-bold text-sm mb-2">
-                      <span className="bg-black text-white px-2 py-0.5 mr-2 text-xs font-extrabold">
+                  <div key={i} className="p-3" style={{ ...s.previewQ, border: "2px solid" }}>
+                    <p className="font-bold text-sm mb-2" style={s.textPrimary}>
+                      <span className="px-2 py-0.5 mr-2 text-xs font-extrabold" style={s.previewNum}>
                         P{i + 1}
                       </span>
                       {q.question}
@@ -222,11 +242,11 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
                       {q.options.map((opt, j) => (
                         <div
                           key={j}
-                          className={`text-xs font-medium px-2 py-1 ${
-                            j === q.correct_index
-                              ? "bg-[#C5E1A5] border border-[#8BC34A]"
-                              : "bg-white border border-gray-200"
-                          }`}
+                          className="text-xs font-medium px-2 py-1"
+                          style={j === q.correct_index
+                            ? { background: "#C5E1A5", border: "1px solid #8BC34A" }
+                            : s.previewOpt
+                          }
                         >
                           {String.fromCharCode(65 + j)}) {opt}
                           {j === q.correct_index && " ✓"}
@@ -243,34 +263,34 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
               <div className="space-y-3">
                 {preview.instructions && (
                   <div>
-                    <p className="text-sm font-extrabold uppercase tracking-wide mb-1">
+                    <p className="text-sm font-extrabold uppercase tracking-wide mb-1" style={s.textPrimary}>
                       Instrucciones
                     </p>
-                    <div className="bg-gray-50 border-2 border-gray-200 p-3 text-sm whitespace-pre-wrap">
+                    <div className="p-3 text-sm whitespace-pre-wrap" style={{ ...s.previewQ, border: "2px solid" }}>
                       {preview.instructions}
                     </div>
                   </div>
                 )}
                 {preview.objectives && (
                   <div>
-                    <p className="text-sm font-extrabold uppercase tracking-wide mb-1">
+                    <p className="text-sm font-extrabold uppercase tracking-wide mb-1" style={s.textPrimary}>
                       Objetivos
                     </p>
                     <ul className="list-disc list-inside text-sm">
                       {preview.objectives.map((o, i) => (
-                        <li key={i} className="font-medium">{o}</li>
+                        <li key={i} className="font-medium" style={s.textPrimary}>{o}</li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {preview.criteria && (
                   <div>
-                    <p className="text-sm font-extrabold uppercase tracking-wide mb-1">
+                    <p className="text-sm font-extrabold uppercase tracking-wide mb-1" style={s.textPrimary}>
                       Criterios de evaluación
                     </p>
                     <ul className="list-disc list-inside text-sm">
                       {preview.criteria.map((c, i) => (
-                        <li key={i} className="font-medium">{c}</li>
+                        <li key={i} className="font-medium" style={s.textPrimary}>{c}</li>
                       ))}
                     </ul>
                   </div>
@@ -279,22 +299,25 @@ export default function AIGenerateModal({ open, onClose, courseId, onSaved }) {
             )}
 
             {/* Action buttons */}
-            <div className="flex gap-2 pt-2 border-t-2 border-gray-100">
+            <div className="flex gap-2 pt-2" style={{ borderTop: "2px solid", borderColor: dark ? "#3f3f46" : "#f3f4f6" }}>
               <button
-                onClick={regenerate}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 py-3 nb-border nb-press font-bold uppercase tracking-wide text-sm"
+                onClick={() => generate()}
+                className="flex-1 py-3 nb-border nb-press font-bold uppercase tracking-wide text-sm"
+                style={{ background: dark ? "#3f3f46" : "#f3f4f6", color: dark ? "#fafafa" : "#1a1a1a" }}
               >
                 ↻ Volver a generar
               </button>
               <button
                 onClick={() => save("draft")}
-                className="flex-1 bg-white hover:bg-gray-50 py-3 nb-border nb-press font-bold uppercase tracking-wide text-sm"
+                className="flex-1 py-3 nb-border nb-press font-bold uppercase tracking-wide text-sm"
+                style={s.card}
               >
                 Guardar como borrador
               </button>
               <button
                 onClick={() => save("published")}
-                className="flex-1 bg-[#C5E1A5] hover:bg-[#b5d195] py-3 nb-border nb-press font-extrabold uppercase tracking-wide text-sm"
+                className="flex-1 py-3 nb-border nb-press font-extrabold uppercase tracking-wide text-sm"
+                style={{ background: "#C5E1A5", color: "#1a1a1a" }}
               >
                 Publicar
               </button>

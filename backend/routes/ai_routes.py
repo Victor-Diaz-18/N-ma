@@ -51,6 +51,9 @@ async def generate_activity(
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al generar actividad: {str(e)}")
+        msg = str(e)
+        if "429" in msg or "quota" in msg.lower() or "rate" in msg.lower():
+            raise HTTPException(status_code=429, detail="Límite de solicitudes de IA alcanzado. Intenta de nuevo en unos minutos.")
+        raise HTTPException(status_code=500, detail="Error al generar actividad con IA. Intenta de nuevo.")
 
     return result

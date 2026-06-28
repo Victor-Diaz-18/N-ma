@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "../lib/theme";
-import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
+import { X, Send, Loader2, User } from "lucide-react";
 import { api } from "../lib/api";
+
+const MASCOT_SRC = "/mascota.png";
 
 export default function AIChatbot({ courseId }) {
   const { theme } = useTheme();
@@ -29,7 +31,6 @@ export default function AIChatbot({ courseId }) {
     msgUser: { background: "#8BC34A", color: "#18181b", alignSelf: "flex-end", maxWidth: "80%" },
     msgBot: { background: dark ? "#3f3f46" : "#f3f4f6", color: dark ? "#fafafa" : "#1a1a1a", alignSelf: "flex-start", maxWidth: "80%" },
     input: { background: dark ? "#3f3f46" : "#fff", color: dark ? "#fafafa" : "#1a1a1a", borderColor: dark ? "#52525b" : "#d1d5db" },
-    fab: { background: "#8BC34A", color: "#18181b" },
   };
 
   const send = async () => {
@@ -59,16 +60,30 @@ export default function AIChatbot({ courseId }) {
     }
   };
 
+  const avatarStyle = {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    objectPosition: "left center",
+    borderRadius: "50%",
+  };
+
   return createPortal(
     <>
       {/* FAB */}
       <button
         onClick={() => setOpen(!open)}
-        className="w-14 h-14 rounded-full nb-shadow nb-press flex items-center justify-center"
-        style={{ ...s.fab, position: "fixed", bottom: "24px", right: "24px", zIndex: 9999 }}
+        className="w-14 h-14 rounded-full nb-shadow nb-press overflow-hidden"
+        style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999 }}
         title="Dudas del curso"
       >
-        {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+        {open ? (
+          <div className="w-full h-full flex items-center justify-center" style={{ background: "#8BC34A", color: "#18181b" }}>
+            <X className="w-6 h-6" />
+          </div>
+        ) : (
+          <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
+        )}
       </button>
 
       {/* Chat Panel */}
@@ -79,7 +94,9 @@ export default function AIChatbot({ courseId }) {
         >
           {/* Header */}
           <div className="flex items-center gap-2 p-3" style={s.header}>
-            <Bot className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+              <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
+            </div>
             <span className="font-extrabold text-sm uppercase tracking-wide flex-1">
               Asistente IA
             </span>
@@ -91,16 +108,18 @@ export default function AIChatbot({ courseId }) {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {messages.length === 0 && (
-              <div className="text-center text-sm font-medium pt-8" style={{ color: dark ? "#71717a" : "#9ca3af" }}>
-                <Bot className="w-8 h-8 mx-auto mb-2" style={{ color: dark ? "#71717a" : "#9ca3af" }} />
-                Pregúntame lo que quieras sobre el contenido de este curso.
+              <div className="text-center text-sm font-medium pt-4" style={{ color: dark ? "#71717a" : "#9ca3af" }}>
+                <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden">
+                  <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
+                </div>
+                ¡Hola! Soy tu asistente de plantas medicinales. Pregúntame lo que quieras sobre el contenido de este curso.
               </div>
             )}
             {messages.map((m, i) => (
               <div key={i} className="flex gap-2" style={{ justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
                 {m.role === "bot" && (
-                  <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-1" style={{ background: "#8BC34A", color: "#18181b" }}>
-                    <Bot className="w-3.5 h-3.5" />
+                  <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 mt-1">
+                    <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
                   </div>
                 )}
                 <div
@@ -110,7 +129,7 @@ export default function AIChatbot({ courseId }) {
                   {m.text}
                 </div>
                 {m.role === "user" && (
-                  <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-1" style={{ background: dark ? "#52525b" : "#e5e7eb", color: dark ? "#fafafa" : "#1a1a1a" }}>
+                  <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center mt-1" style={{ background: dark ? "#52525b" : "#e5e7eb", color: dark ? "#fafafa" : "#1a1a1a" }}>
                     <User className="w-3.5 h-3.5" />
                   </div>
                 )}
@@ -118,8 +137,8 @@ export default function AIChatbot({ courseId }) {
             ))}
             {loading && (
               <div className="flex gap-2 items-start">
-                <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#8BC34A", color: "#18181b" }}>
-                  <Bot className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+                  <img src={MASCOT_SRC} alt="Asistente" style={avatarStyle} />
                 </div>
                 <div className="px-3 py-2" style={{ background: dark ? "#3f3f46" : "#f3f4f6" }}>
                   <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#8BC34A" }} />

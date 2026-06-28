@@ -125,42 +125,46 @@ h1, h2, h3, h4, h5, h6, .font-display {
 /* ===================== DARK MODE ===================== */
 
 html.dark {
-  background: #1a2a1a !important;
-  color: #e8f0e8 !important;
+  background: #18181b !important;
+  color: #fafafa !important;
 }
 
-html.dark body { background: #1a2a1a !important; color: #e8f0e8 !important; }
+html.dark body { background: #18181b !important; color: #fafafa !important; }
 
-/* Same colors as light, inverted */
-html.dark .bg-\[\#F5F1E4\] { background: #1a2a1a !important; }
-html.dark .bg-white { background: #1e281e !important; }
+/* Backgrounds — neutral grays */
+html.dark .bg-\[\#F5F1E4\] { background: #18181b !important; }
+html.dark .bg-white { background: #27272a !important; }
 html.dark .bg-\[\#1F5A2A\] { background: #1F5A2A !important; }
 html.dark .bg-\[\#8BC34A\] { background: #8BC34A !important; }
 html.dark .bg-\[\#A5D6A7\] { background: #A5D6A7 !important; }
 html.dark .bg-\[\#C5E1A5\] { background: #C5E1A5 !important; }
 html.dark .bg-\[\#FF6B6B\] { background: #FF6B6B !important; }
-html.dark .bg-\[\#2a4a2e\] { background: #1a2a1a !important; }
+html.dark .bg-\[\#2a4a2e\] { background: #27272a !important; }
 
-html.dark .text-\[\#1F5A2A\] { color: #e8f0e8 !important; }
-html.dark .text-\[\#3E5A3E\] { color: #c8e0c8 !important; }
-html.dark .text-\[\#3E8E41\] { color: #a0d0a0 !important; }
-html.dark .text-\[\#4A4A4A\] { color: #b0c8b0 !important; }
-html.dark .text-white { color: #1a2a1a !important; }
+/* Text — light on dark */
+html.dark .text-\[\#1F5A2A\] { color: #fafafa !important; }
+html.dark .text-\[\#3E5A3E\] { color: #d4d4d8 !important; }
+html.dark .text-\[\#3E8E41\] { color: #a1a1aa !important; }
+html.dark .text-\[\#4A4A4A\] { color: #a1a1aa !important; }
+html.dark .text-white { color: #18181b !important; }
 
-html.dark .nb-border { border-color: #1F5A2A !important; }
-html.dark .nb-shadow { box-shadow: 4px 4px 0 0 #0a1a0a !important; }
-html.dark .nb-shadow-lg { box-shadow: 6px 6px 0 0 #0a1a0a !important; }
-html.dark .nb-shadow-sm { box-shadow: 2px 2px 0 0 #0a1a0a !important; }
-html.dark .grain { background-image: radial-gradient(rgba(150,210,150,0.03) 1px, transparent 1px); }
+/* Borders */
+html.dark .nb-border { border-color: #3f3f46 !important; }
+html.dark .nb-shadow { box-shadow: 4px 4px 0 0 #09090b !important; }
+html.dark .nb-shadow-lg { box-shadow: 6px 6px 0 0 #09090b !important; }
+html.dark .nb-shadow-sm { box-shadow: 2px 2px 0 0 #09090b !important; }
+html.dark .grain { background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); }
 
-html.dark .border-\[\#1F5A2A\] { border-color: #1F5A2A !important; }
-html.dark .border-t-2 { border-color: #1F5A2A !important; }
-html.dark .border-b-2 { border-color: #1F5A2A !important; }
-html.dark .border-y-2 { border-color: #1F5A2A !important; }
+html.dark .border-\[\#1F5A2A\] { border-color: #3f3f46 !important; }
+html.dark .border-t-2 { border-color: #3f3f46 !important; }
+html.dark .border-b-2 { border-color: #3f3f46 !important; }
+html.dark .border-y-2 { border-color: #3f3f46 !important; }
 
+/* Scrollbar */
 html.dark ::-webkit-scrollbar { width: 8px; }
-html.dark ::-webkit-scrollbar-track { background: #1a2a1a; }
-html.dark ::-webkit-scrollbar-thumb { background: #3a6a3e; border-radius: 4px; }
-html.dark ::-webkit-scrollbar-thumb:hover { background: #5a8a5e; }
+html.dark ::-webkit-scrollbar-track { background: #18181b; }
+html.dark ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
-html.dark ::selection { background: #8BC34A; color: #1a2a1a; }
+/* Selection */
+html.dark ::selection { background: #8BC34A; color: #18181b; }

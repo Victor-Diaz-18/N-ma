@@ -16,6 +16,7 @@ class ActivityCreate(BaseModel):
     max_points: int = Field(default=100, ge=1)
     xp_reward: int = Field(default=50, ge=0)
     quiz_questions: Optional[List[QuizQuestion]] = None
+    status: Literal["draft", "published"] = "published"
 
 
 class ActivityResponse(BaseModel):

@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api, API } from "../lib/api";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBInput, NBTextarea } from "../components/nb";
+import AIGenerateModal from "../components/AIGenerateModal";
 import { Plus, Trash2, FileText, LinkIcon, BookOpen, ClipboardList, Upload, Star, Download, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
@@ -167,44 +168,11 @@ function ResourcesPanel({ courseId, resources, reload }) {
 
 function ActivitiesPanel({ courseId, activities, reload }) {
   const [open, setOpen] = useState(false);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
   const [type, setType] = useState("assignment");
   const [title, setTitle] = useState(""); const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(""); const [maxPoints, setMaxPoints] = useState(100); const [xpReward, setXpReward] = useState(50);
   const [questions, setQuestions] = useState([{ question: "", options: ["", "", "", ""], correct_index: 0 }]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiCount, setAiCount] = useState(5);
-
-  const generateAI = async (saveDirectly = false) => {
-    setAiLoading(true);
-    try {
-      const { data } = await api.post("/ai/generate-quiz", { course_id: courseId, num_questions: aiCount });
-      if (data.questions && data.questions.length > 0) {
-        const qs = data.questions.map(q => ({ question: q.question, options: q.options, correct_index: q.correct_index }));
-        if (saveDirectly) {
-          await api.post(`/courses/${courseId}/activities`, {
-            title: "Quiz generado por IA",
-            description: "Preguntas generadas automáticamente basadas en el contenido del curso.",
-            type: "quiz",
-            due_date: null,
-            max_points: 100,
-            xp_reward: 50,
-            quiz_questions: qs.map(q => ({ ...q, correct_index: Number(q.correct_index) })),
-          });
-          toast.success(`${qs.length} preguntas generadas y guardadas`);
-          reload();
-        } else {
-          setQuestions(qs);
-          setType("quiz");
-          setTitle("Quiz generado por IA");
-          setDescription("Preguntas generadas automáticamente basadas en el contenido del curso.");
-          toast.success(`${qs.length} preguntas generadas — revisa y guarda`);
-        }
-      }
-    } catch (e) {
-      toast.error(e.response?.data?.detail || "Error al generar quiz con IA");
-    }
-    setAiLoading(false);
-  };
 
   const addQ = () => setQuestions([...questions, { question: "", options: ["", "", "", ""], correct_index: 0 }]);
   const updateQ = (i, field, val) => { const c = [...questions]; c[i][field] = val; setQuestions(c); };
@@ -213,7 +181,7 @@ function ActivitiesPanel({ courseId, activities, reload }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    const payload = { title, description, type, due_date: dueDate || null, max_points: Number(maxPoints), xp_reward: Number(xpReward) };
+    const payload = { title, description, type, due_date: dueDate || null, max_points: Number(maxPoints), xp_reward: Number(xpReward), status: "published" };
     if (type === "quiz") payload.quiz_questions = questions.map(q => ({ ...q, correct_index: Number(q.correct_index) }));
     try {
       await api.post(`/courses/${courseId}/activities`, payload);
@@ -224,20 +192,18 @@ function ActivitiesPanel({ courseId, activities, reload }) {
 
   return (
     <div className="space-y-3">
+      <AIGenerateModal
+        open={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        courseId={courseId}
+        onSaved={reload}
+      />
       <div className="flex gap-2 flex-wrap items-center">
         {!open && <NBButton variant="dark" onClick={() => setOpen(true)} data-testid="add-activity-btn"><Plus className="inline w-4 h-4 mr-1" /> Agregar actividad</NBButton>}
         {!open && (
-          <>
-            <NBButton variant="primary" onClick={() => generateAI(false)} disabled={aiLoading} data-testid="ai-generate-btn">
-              <Sparkles className="inline w-4 h-4 mr-1" /> {aiLoading ? "Generando..." : "Generar y editar"}
-            </NBButton>
-            <NBButton variant="purple" onClick={() => generateAI(true)} disabled={aiLoading} data-testid="ai-generate-save-btn">
-              <Sparkles className="inline w-4 h-4 mr-1" /> {aiLoading ? "Generando..." : "Generar y guardar"}
-            </NBButton>
-            <select value={aiCount} onChange={(e) => setAiCount(Number(e.target.value))} className="px-2 py-1.5 nb-border bg-white text-sm font-bold">
-              {[3,5,7,10].map(n => <option key={n} value={n}>{n} preguntas</option>)}
-            </select>
-          </>
+          <NBButton variant="primary" onClick={() => setAiModalOpen(true)} data-testid="ai-generate-btn">
+            <Sparkles className="inline w-4 h-4 mr-1" /> Generar actividad con IA
+          </NBButton>
         )}
       </div>
       {open && (
@@ -281,11 +247,29 @@ function ActivitiesPanel({ courseId, activities, reload }) {
       {activities.map((a) => (
         <NBCard key={a.id} className="p-4 flex items-start justify-between gap-3">
           <div>
-            <div className="flex gap-2 items-center flex-wrap"><NBBadge color={a.type === "quiz" ? "#A5D6A7" : "#C5E1A5"}>{a.type === "quiz" ? "quiz" : "tarea"}</NBBadge><NBBadge color="#8BC34A">{a.xp_reward} XP</NBBadge>{a.due_date && <span className="label-caps">Vence {new Date(a.due_date).toLocaleDateString("es-ES")}</span>}</div>
+            <div className="flex gap-2 items-center flex-wrap">
+              <NBBadge color={a.type === "quiz" ? "#A5D6A7" : "#C5E1A5"}>{a.type === "quiz" ? "quiz" : "tarea"}</NBBadge>
+              <NBBadge color="#8BC34A">{a.xp_reward} XP</NBBadge>
+              {a.status === "draft" && <NBBadge color="#FFD93D">borrador</NBBadge>}
+              {a.due_date && <span className="label-caps">Vence {new Date(a.due_date).toLocaleDateString("es-ES")}</span>}
+            </div>
             <div className="font-display font-black mt-1">{a.title}</div>
             <div className="text-sm text-[#4A4A4A]">{a.description}</div>
           </div>
-          <button onClick={() => del(a.id)} className="nb-border p-2 nb-press bg-[#FF6B6B] text-white" data-testid={`delete-activity-${a.id}`}><Trash2 className="w-4 h-4" /></button>
+          <div className="flex gap-2">
+            {a.status === "draft" && (
+              <button
+                onClick={async () => {
+                  await api.patch(`/activities/${a.id}/status`, { status: "published" });
+                  reload();
+                }}
+                className="nb-border p-2 nb-press bg-[#8BC34A] text-white"
+              >
+                <Star className="w-4 h-4" />
+              </button>
+            )}
+            <button onClick={() => del(a.id)} className="nb-border p-2 nb-press bg-[#FF6B6B] text-white" data-testid={`delete-activity-${a.id}`}><Trash2 className="w-4 h-4" /></button>
+          </div>
         </NBCard>
       ))}
     </div>

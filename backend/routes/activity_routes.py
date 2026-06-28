@@ -65,7 +65,16 @@ async def list_activities(
     user = await auth.get_current_user(request)
     db = get_db(request)
 
-    activities = await db.activities.find({"course_id": course_id}, {"_id": 0}).to_list(200)
+    if user["role"] == "student":
+        activities = await db.activities.find(
+            {"course_id": course_id, "status": "published"},
+            {"_id": 0}
+        ).to_list(200)
+    else:
+        activities = await db.activities.find(
+            {"course_id": course_id},
+            {"_id": 0}
+        ).to_list(200)
 
     if user["role"] == "student":
         for a in activities:
@@ -106,6 +115,32 @@ async def get_activity(
                     for q in a["quiz_questions"]
                 ]
     return a
+
+
+@router.patch("/activities/{activity_id}/status")
+async def update_activity_status(
+    activity_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.require_role(request, "teacher")
+    db = get_db(request)
+
+    data = await request.json()
+    new_status = data.get("status")
+    if new_status not in ["draft", "published"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+
+    a = await db.activities.find_one({"id": activity_id})
+    if not a:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    course = await db.courses.find_one({"id": a["course_id"]})
+    if not course or course["teacher_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your course")
+
+    await db.activities.update_one({"id": activity_id}, {"$set": {"status": new_status}})
+    return {"status": new_status}
 
 
 @router.delete("/activities/{activity_id}")

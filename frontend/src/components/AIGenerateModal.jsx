@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Sparkles, FileText, ClipboardCheck, BookOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import api from "../lib/api";
+import { api } from "../lib/api";
 
 const ACTIVITY_TYPES = [
   { id: "quiz", label: "Quiz", icon: ClipboardCheck, desc: "Preguntas de opción múltiple" },

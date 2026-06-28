@@ -79,7 +79,7 @@ export default function Landing() {
               </div>
               <Trophy className="w-10 h-10" strokeWidth={2.5} />
             </div>
-            <div className="mt-4 h-5 nb-border bg-white overflow-hidden">
+            <div className="mt-4 h-5 nb-border overflow-hidden" style={{background: "#27272a"}}>
               <div className="h-full bg-[#A5D6A7] transition-all duration-700" style={{ width: "65%", borderRight: "2px solid #1F5A2A" }} />
             </div>
             <div className="label-caps mt-2">Siguiente: Nivel 8</div>

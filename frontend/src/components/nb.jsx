@@ -10,8 +10,8 @@ export function NBCard({ children, className = "", color = "white", ...props }) 
   const dark = useDark();
   const lightBg = { white: "bg-white", yellow: "bg-[#8BC34A]", purple: "bg-[#A5D6A7]",
                     teal: "bg-[#C5E1A5]", red: "bg-[#FF6B6B]", cream: "bg-[#F5F1E4]" }[color] || color;
-  const darkBg = { white: "bg-[#27272a]", yellow: "bg-[#8BC34A]", purple: "bg-[#A5D6A7]",
-                   teal: "bg-[#C5E1A5]", red: "bg-[#FF6B6B]", cream: "bg-[#27272a]" }[color] || color;
+  const darkBg = { white: "bg-[#27272a]", yellow: "bg-[#2d3a1e]", purple: "bg-[#1e3020]",
+                   teal: "bg-[#1e2e28]", red: "bg-[#3a1e1e]", cream: "bg-[#27272a]" }[color] || color;
   const bg = dark ? darkBg : lightBg;
   return (
     <div className={`${bg} nb-border nb-shadow ${className}`} {...props}>
@@ -32,7 +32,7 @@ export function NBButton({ children, className = "", variant = "primary", ...pro
   };
   const darkVariants = {
     primary: "bg-[#8BC34A] text-[#18181b]",
-    dark: "bg-[#fafafa] text-[#18181b]",
+    dark: "bg-[#e4e4e7] text-[#18181b]",
     purple: "bg-[#A5D6A7] text-[#18181b]",
     teal: "bg-[#C5E1A5] text-[#18181b]",
     danger: "bg-[#FF6B6B] text-[#18181b]",

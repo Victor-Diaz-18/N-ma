@@ -146,7 +146,9 @@ html.dark .text-\[\#1F5A2A\] { color: #fafafa !important; }
 html.dark .text-\[\#3E5A3E\] { color: #d4d4d8 !important; }
 html.dark .text-\[\#3E8E41\] { color: #a1a1aa !important; }
 html.dark .text-\[\#4A4A4A\] { color: #a1a1aa !important; }
+html.dark .text-\[\#2E8B7F\] { color: #5eead4 !important; }
 html.dark .text-white { color: #18181b !important; }
+html.dark .text-\[\#1F5A2A\]\/70 { color: rgba(250,250,250,0.6) !important; }
 
 /* Borders */
 html.dark .nb-border { border-color: #3f3f46 !important; }

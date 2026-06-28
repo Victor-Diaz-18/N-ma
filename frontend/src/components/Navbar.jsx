@@ -6,7 +6,7 @@ import OfflineIndicator from "./OfflineIndicator";
 import NotificationBell from "./NotificationBell";
 import { LogOut, Trophy, User, LayoutDashboard, BookOpen, Menu, X, Sun, Moon } from "lucide-react";
 
-const LOGO_URL = "/logo.svg";
+const LOGO_URL = "/logo.png";
 
 export default function Navbar() {
   const { user, logout } = useAuth();

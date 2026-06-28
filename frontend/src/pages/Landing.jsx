@@ -4,7 +4,7 @@ import { NBButton, NBBadge, NBCard } from "../components/nb";
 import { useTheme } from "../lib/theme";
 import { Trophy, BookOpen, Sparkles, ArrowRight, Star, Target, Users, Zap, Award, ChevronRight, Github, ExternalLink, Sun, Moon } from "lucide-react";
 
-const LOGO_URL = "/logo.svg";
+const LOGO_URL = "/logo.png";
 const MARQUEE_WORDS = ["Aprende", "Enseña", "Sube de nivel", "Gana XP", "Desbloquea insignias", "Escala el ranking"];
 
 export default function Landing() {

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { registerSchema } from "../lib/validations";
 import { useFormValidation } from "../hooks/useFormValidation";
 
-const LOGO_URL = "/logo.svg";
+const LOGO_URL = "/logo.png";
 
 export default function Register() {
   const { register } = useAuth();

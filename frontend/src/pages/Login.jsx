@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { loginSchema } from "../lib/validations";
 import { useFormValidation } from "../hooks/useFormValidation";
 
-const LOGO_URL = "/logo.svg";
+const LOGO_URL = "/logo.png";
 
 export default function Login() {
   const { login } = useAuth();

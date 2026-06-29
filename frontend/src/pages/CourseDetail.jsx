@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import AIChatbot from "../components/AIChatbot";
 import { NBCard, NBButton, NBBadge } from "../components/nb";
 import ReactMarkdown from "react-markdown";
-import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, ArrowLeft, Pencil, Download, HardDriveDownload, Check } from "lucide-react";
+import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, ArrowLeft, Pencil, Download, HardDriveDownload, Check, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { markCourseOffline, isCourseOffline, markFileOffline, isFileOffline, precacheFile } from "../lib/offline";
 
@@ -113,6 +113,11 @@ export default function CourseDetail() {
               {course.is_owner && (
                 <Link to={`/courses/${id}/manage`}>
                   <NBButton variant="dark" data-testid="course-manage-btn"><Pencil className="inline w-4 h-4 mr-1" /> Administrar</NBButton>
+                </Link>
+              )}
+              {course.is_enrolled && (
+                <Link to={`/courses/${id}/leaderboard`}>
+                  <NBButton variant="ghost" data-testid="course-leaderboard-btn"><Trophy className="inline w-4 h-4 mr-1" /> Ranking</NBButton>
                 </Link>
               )}
               {user?.role === "student" && !course.is_enrolled && (

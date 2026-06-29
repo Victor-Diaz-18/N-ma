@@ -52,6 +52,7 @@ function App() {
                   <Route path="/courses/new" element={<ProtectedRoute role="teacher"><CourseNew /></ProtectedRoute>} />
                   <Route path="/courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
                   <Route path="/courses/:id/manage" element={<ProtectedRoute role="teacher"><CourseManage /></ProtectedRoute>} />
+                  <Route path="/courses/:courseId/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
                   <Route path="/activities/:id" element={<ProtectedRoute><ActivityDetail /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />

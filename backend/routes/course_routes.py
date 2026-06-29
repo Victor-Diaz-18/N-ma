@@ -356,3 +356,83 @@ async def export_students(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/courses/{course_id}/leaderboard")
+async def course_leaderboard(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await auth.get_current_user(request)
+    db: AsyncIOMotorDatabase = request.app.state.db
+
+    course = await db.courses.find_one({"id": course_id})
+    if not course:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Curso no encontrado")
+
+    is_teacher = course.get("teacher_id") == user["id"]
+    is_enrolled = await db.enrollments.find_one({"course_id": course_id, "student_id": user["id"]})
+
+    if not is_teacher and not is_enrolled:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="No tienes acceso a este curso")
+
+    enrollments = await db.enrollments.find({"course_id": course_id}).to_list(500)
+    activities = await db.activities.find({"course_id": course_id}).to_list(500)
+    activity_ids = {a["id"] for a in activities}
+    activity_map = {a["id"]: a for a in activities}
+
+    students = []
+    for e in enrollments:
+        student = await db.users.find_one({"id": e["student_id"]}, {"_id": 0, "password_hash": 0})
+        if not student:
+            continue
+
+        submissions = await db.submissions.find({
+            "student_id": e["student_id"],
+            "course_id": course_id,
+        }).to_list(500)
+
+        total_score = 0
+        max_possible = 0
+        completed = 0
+        for s in submissions:
+            act = activity_map.get(s.get("activity_id"))
+            if not act:
+                continue
+            pts = act.get("max_points", 100)
+            max_possible += pts
+            if s.get("status") == "graded" and s.get("score") is not None:
+                total_score += s["score"]
+                completed += 1
+
+        average = round(total_score / max_possible * 100, 1) if max_possible > 0 else 0
+
+        students.append({
+            "id": student["id"],
+            "name": student.get("name", ""),
+            "avatar_color": student.get("avatar_color", "#FFE156"),
+            "xp": student.get("xp", 0),
+            "level": student.get("level", 1),
+            "total_score": total_score,
+            "max_possible": max_possible,
+            "average": average,
+            "completed": completed,
+            "total_activities": len(activities),
+            "is_me": student["id"] == user["id"],
+        })
+
+    students.sort(key=lambda s: (-s["average"], -s["total_score"]))
+
+    for i, s in enumerate(students):
+        s["rank"] = i + 1
+
+    return {
+        "course_title": course.get("title", ""),
+        "course_color": course.get("cover_color", "#8BC34A"),
+        "items": students,
+        "total": len(students),
+        "total_activities": len(activities),
+    }

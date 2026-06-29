@@ -1,27 +1,44 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge } from "../components/nb";
-import { Trophy, Crown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trophy, Crown, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 
 export default function Leaderboard() {
+  const { courseId } = useParams();
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [courseTitle, setCourseTitle] = useState("");
+  const [courseColor, setCourseColor] = useState("#8BC34A");
+  const [totalActivities, setTotalActivities] = useState(0);
+
+  const isCourseLeaderboard = !!courseId;
 
   const load = useCallback(async (p = 1) => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/leaderboard?page=${p}&limit=20`);
-      setRows(data.items);
-      setPages(data.pages);
-      setTotal(data.total);
+      if (isCourseLeaderboard) {
+        const { data } = await api.get(`/courses/${courseId}/leaderboard`);
+        setRows(data.items);
+        setTotal(data.total);
+        setCourseTitle(data.course_title);
+        setCourseColor(data.course_color);
+        setTotalActivities(data.total_activities);
+        setPages(1);
+      } else {
+        const { data } = await api.get(`/leaderboard?page=${p}&limit=20`);
+        setRows(data.items);
+        setPages(data.pages);
+        setTotal(data.total);
+      }
       setPage(p);
     } catch (e) { /* ignore */ }
     setLoading(false);
-  }, []);
+  }, [courseId, isCourseLeaderboard]);
 
   useEffect(() => { load(1); }, [load]);
 
@@ -29,16 +46,27 @@ export default function Leaderboard() {
     <div className="min-h-screen bg-[#F5F1E4] grain">
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6" data-testid="leaderboard-page">
+        {isCourseLeaderboard && (
+          <Link to={`/courses/${courseId}`} className="inline-flex items-center gap-2 label-caps font-bold nb-press">
+            <ArrowLeft className="w-4 h-4" /> Volver al curso
+          </Link>
+        )}
+
         <div className="flex items-end gap-3">
-          <Trophy className="w-10 h-10" strokeWidth={2.5} />
+          <Trophy className="w-10 h-10" strokeWidth={2.5} style={{ color: courseColor }} />
           <div>
             <div className="label-caps text-[#3E5A3E]">{total} estudiantes</div>
-            <h1 className="font-display font-black text-4xl sm:text-5xl uppercase text-[#1F5A2A]">Ranking</h1>
+            <h1 className="font-display font-black text-4xl sm:text-5xl uppercase text-[#1F5A2A]">
+              {isCourseLeaderboard ? `Ranking · ${courseTitle}` : "Ranking"}
+            </h1>
+            {isCourseLeaderboard && (
+              <div className="label-caps mt-1">{totalActivities} actividades</div>
+            )}
           </div>
         </div>
 
-        {/* Podium — only on first page */}
-        {page === 1 && rows.length >= 3 && (
+        {/* Podium — only on first page, only for global leaderboard */}
+        {!isCourseLeaderboard && page === 1 && rows.length >= 3 && (
           <div className="grid grid-cols-3 gap-3 items-end">
             <PodiumCard entry={rows[1]} place={2} height="h-36" color="#C5E1A5" />
             <PodiumCard entry={rows[0]} place={1} height="h-48" color="#8BC34A" crown />
@@ -48,13 +76,22 @@ export default function Leaderboard() {
 
         <NBCard className="p-0 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-[#1F5A2A] text-white">
+            <thead style={{ background: "#1F5A2A", color: "#fff" }}>
               <tr className="text-left label-caps">
                 <th className="px-4 py-3">Puesto</th>
                 <th className="px-4 py-3">Jugador</th>
-                <th className="px-4 py-3">Nivel</th>
-                <th className="px-4 py-3">Insignias</th>
-                <th className="px-4 py-3 text-right">XP</th>
+                {isCourseLeaderboard ? (
+                  <>
+                    <th className="px-4 py-3">Actividades</th>
+                    <th className="px-4 py-3 text-right">Promedio</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-4 py-3">Nivel</th>
+                    <th className="px-4 py-3">Insignias</th>
+                    <th className="px-4 py-3 text-right">XP</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -67,12 +104,21 @@ export default function Leaderboard() {
                       <span className="font-bold">{r.name}{r.is_me && <NBBadge color="#FF6B6B" className="ml-2">tú</NBBadge>}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-mono">{r.level}</td>
-                  <td className="px-4 py-3 font-mono">{r.badge_count}</td>
-                  <td className="px-4 py-3 text-right font-mono font-bold">{r.xp}</td>
+                  {isCourseLeaderboard ? (
+                    <>
+                      <td className="px-4 py-3 font-mono">{r.completed}/{r.total_activities}</td>
+                      <td className="px-4 py-3 text-right font-mono font-bold">{r.average}%</td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-3 font-mono">{r.level}</td>
+                      <td className="px-4 py-3 font-mono">{r.badge_count}</td>
+                      <td className="px-4 py-3 text-right font-mono font-bold">{r.xp}</td>
+                    </>
+                  )}
                 </tr>
               ))}
-              {!loading && rows.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-[#3E5A3E]">Aún no hay estudiantes.</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={isCourseLeaderboard ? 4 : 5} className="px-4 py-6 text-center text-[#3E5A3E]">Aún no hay estudiantes en este curso.</td></tr>}
             </tbody>
           </table>
         </NBCard>

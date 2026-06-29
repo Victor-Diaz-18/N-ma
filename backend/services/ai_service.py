@@ -1,17 +1,16 @@
 import json
 import os
-import google.generativeai as genai
+from google import genai
 
 
 class AIService:
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY", "")
-        if api_key:
-            genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-2.0-flash") if api_key else None
+        self.client = genai.Client(api_key=api_key) if api_key else None
+        self.model = "gemini-2.5-flash"
 
     async def generate_activity(self, course_title: str, course_description: str, lessons: list[dict], activity_type: str, num_questions: int = 5) -> dict:
-        if not self.model:
+        if not self.client:
             raise ValueError("GEMINI_API_KEY no configurada")
 
         lessons_text = ""
@@ -120,7 +119,7 @@ Genera la tarea ahora:"""
 
         prompt = prompts.get(activity_type, prompts["quiz"])
 
-        response = self.model.generate_content(prompt)
+        response = self.client.models.generate_content(model=self.model, contents=prompt)
         text = response.text.strip()
 
         if text.startswith("```"):
@@ -147,7 +146,7 @@ Genera la tarea ahora:"""
         return result
 
     async def chat(self, course_title: str, course_description: str, lessons: list[dict], question: str) -> str:
-        if not self.model:
+        if not self.client:
             raise ValueError("GEMINI_API_KEY no configurada")
 
         lessons_text = ""
@@ -178,5 +177,5 @@ PREGUNTA DEL ESTUDIANTE: {question}
 
 RESPUESTA:"""
 
-        response = self.model.generate_content(prompt)
+        response = self.client.models.generate_content(model=self.model, contents=prompt)
         return response.text.strip()

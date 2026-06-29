@@ -79,7 +79,7 @@ async def chat(
     if not course:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
 
-    enrolled = await db.enrollments.find_one({"course_id": data.course_id, "user_id": user["id"]})
+    enrolled = await db.enrollments.find_one({"course_id": data.course_id, "student_id": user["id"]})
     is_teacher = course.get("teacher_id") == user["id"]
     is_student_enrolled = user["role"] == "student" and enrolled is not None
 

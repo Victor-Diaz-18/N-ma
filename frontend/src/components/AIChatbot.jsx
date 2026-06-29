@@ -45,9 +45,16 @@ export default function AIChatbot({ courseId }) {
       const { data } = await api.post("/ai/chat", { course_id: courseId, question: q });
       setMessages((prev) => [...prev, { role: "bot", text: data.answer }]);
     } catch (e) {
-      const msg = e.response?.status === 429
-        ? "Límite de solicitudes alcanzado. Espera unos minutos."
-        : "Error al procesar tu pregunta.";
+      let msg = "Error al procesar tu pregunta.";
+      if (e.response?.status === 429) {
+        msg = "Límite de solicitudes de IA alcanzado. Espera unos minutos e intenta de nuevo.";
+      } else if (e.response?.status === 403) {
+        msg = "No estás inscrito en este curso. Inscríbete para usar el chat.";
+      } else if (e.response?.status === 404) {
+        msg = "Curso no encontrado.";
+      } else if (e.response?.data?.detail) {
+        msg = e.response.data.detail;
+      }
       setMessages((prev) => [...prev, { role: "bot", text: msg }]);
     }
     setLoading(false);

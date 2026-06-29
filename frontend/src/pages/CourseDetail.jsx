@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import AIChatbot from "../components/AIChatbot";
 import { NBCard, NBButton, NBBadge } from "../components/nb";
 import ReactMarkdown from "react-markdown";
-import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, Pencil, Download, HardDriveDownload, Check } from "lucide-react";
+import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, ArrowLeft, Pencil, Download, HardDriveDownload, Check } from "lucide-react";
 import { toast } from "sonner";
 import { markCourseOffline, isCourseOffline, markFileOffline, isFileOffline, precacheFile } from "../lib/offline";
 
@@ -92,6 +92,10 @@ export default function CourseDetail() {
     <div className="min-h-screen bg-[#F5F1E4] grain">
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6" data-testid="course-detail">
+        {/* Back button */}
+        <Link to="/courses" className="inline-flex items-center gap-2 label-caps font-bold nb-press">
+          <ArrowLeft className="w-4 h-4" /> Regresar a mis cursos
+        </Link>
         {/* Header */}
         <NBCard className="overflow-hidden">
           <div className="h-32 border-b-2 border-[#1F5A2A] flex items-end p-6" style={{ background: course.cover_color || "#8BC34A" }}>

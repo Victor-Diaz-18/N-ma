@@ -95,8 +95,8 @@ export default function AIChatbot({ courseId }) {
       {/* Chat Panel */}
       {open && (
         <div
-          className="w-80 max-w-[calc(100vw-48px)] flex flex-col nb-border nb-shadow"
-          style={{ ...s.panel, position: "fixed", bottom: "96px", right: "24px", zIndex: 9999, height: "450px", borderWidth: 2 }}
+          className="flex flex-col nb-border nb-shadow"
+          style={{ ...s.panel, position: "fixed", bottom: "96px", right: "24px", zIndex: 9999, height: "450px", borderWidth: 2, width: "min(320px, calc(100vw - 48px))" }}
         >
           {/* Header */}
           <div className="flex items-center gap-2 p-3" style={s.header}>

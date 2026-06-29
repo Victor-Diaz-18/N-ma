@@ -67,7 +67,7 @@ function StudentDashboard() {
           <NBCard className="md:col-span-3 p-6">
             <div className="label-caps">Insignias ganadas</div>
             <div className="font-display font-black text-4xl">{stats?.earned_badges_count ?? 0} <span className="text-[#3E5A3E] text-xl">/ {stats?.badges?.length ?? 6}</span></div>
-            <div className="grid grid-cols-6 gap-2 mt-4">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4">
               {stats?.badges?.map((b) => (
                 <div key={b.id} className={`aspect-square nb-border flex items-center justify-center ${b.earned ? "" : "opacity-40"}`} style={{ background: b.earned ? b.color : (dark ? "#3f3f46" : "#d1d5db") }} title={b.name} data-testid={`dash-badge-${b.id}`}>
                   <Award className="w-6 h-6" strokeWidth={2.5} style={{ color: b.earned ? "#fff" : (dark ? "#71717a" : "#9ca3af") }} />

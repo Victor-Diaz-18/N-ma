@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { useTheme } from "../lib/theme";
 import Navbar from "../components/Navbar";
 import { NBCard, NBProgress, NBBadge } from "../components/nb";
 import { Award, Zap, BookOpen, Users, BarChart3 } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const dark = theme === "dark";
   const [stats, setStats] = useState(null);
   const [teacherStats, setTeacherStats] = useState(null);
 
@@ -27,7 +30,7 @@ export default function Profile() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#F5F1E4] grain">
+    <div className="min-h-screen grain" style={{ background: dark ? "#18181b" : "#F5F1E4" }}>
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6" data-testid="profile-page">
         <NBCard className="p-6 flex items-center gap-5 flex-wrap">
@@ -36,8 +39,8 @@ export default function Profile() {
           </div>
           <div className="flex-1">
             <div className="label-caps">{user.role === "teacher" ? "profesor" : "estudiante"}</div>
-            <h1 className="font-display font-black text-4xl uppercase text-[#1F5A2A]">{user.name}</h1>
-            <div className="text-sm text-[#3E5A3E]">{user.email}</div>
+            <h1 className="font-display font-black text-4xl uppercase" style={{ color: dark ? "#fafafa" : "#1F5A2A" }}>{user.name}</h1>
+            <div className="text-sm" style={{ color: dark ? "#a1a1aa" : "#3E5A3E" }}>{user.email}</div>
           </div>
           <NBBadge color="#A5D6A7">Se unió el {user.created_at ? new Date(user.created_at).toLocaleDateString("es-ES") : ""}</NBBadge>
         </NBCard>
@@ -65,7 +68,7 @@ export default function Profile() {
             </div>
 
             <section>
-              <h2 className="font-display font-black text-2xl uppercase text-[#1F5A2A] mb-4">Insignias</h2>
+              <h2 className="font-display font-black text-2xl uppercase mb-4" style={{ color: dark ? "#fafafa" : "#1F5A2A" }}>Insignias</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                 {stats.badges.map((b) => (
                   <div key={b.id} className={`nb-border p-4 text-center ${b.earned ? "nb-shadow" : "opacity-40"}`} style={{ background: b.earned ? b.color : (dark ? "#3f3f46" : "#d1d5db") }} data-testid={`profile-badge-${b.id}`}>
@@ -100,7 +103,7 @@ export default function Profile() {
               <Award className="w-8 h-8 mb-2" strokeWidth={2.5} />
               <div className="label-caps">Entregas calificadas</div>
               <div className="font-display font-black text-5xl">{teacherStats.graded_submissions}</div>
-              <div className="text-sm text-[#3E5A3E]">de {teacherStats.total_submissions} totales</div>
+              <div className="text-sm" style={{ color: dark ? "#a1a1aa" : "#3E5A3E" }}>de {teacherStats.total_submissions} totales</div>
             </NBCard>
           </div>
         )}

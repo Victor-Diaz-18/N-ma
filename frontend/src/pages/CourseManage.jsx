@@ -217,7 +217,7 @@ function ActivitiesPanel({ courseId, activities, reload }) {
             </div>
             <NBInput placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} required data-testid="activity-title-input" />
             <NBTextarea placeholder="Descripción / instrucciones" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} required data-testid="activity-desc-input" />
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <NBInput type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} data-testid="activity-due-input" />
               <NBInput type="number" placeholder="Puntos máx." value={maxPoints} onChange={(e) => setMaxPoints(e.target.value)} data-testid="activity-maxpoints-input" />
               <NBInput type="number" placeholder="XP recompensa" value={xpReward} onChange={(e) => setXpReward(e.target.value)} data-testid="activity-xp-input" />

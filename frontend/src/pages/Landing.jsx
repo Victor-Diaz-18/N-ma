@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { NBButton, NBBadge, NBCard } from "../components/nb";
 import { useTheme } from "../lib/theme";
-import { Trophy, BookOpen, Sparkles, ArrowRight, Star, Target, Users, Zap, Award, ChevronRight, Github, ExternalLink, Sun, Moon } from "lucide-react";
+import { Trophy, BookOpen, Sparkles, ArrowRight, Star, Target, Users, Zap, Award, ChevronRight, Github, ExternalLink, Sun, Moon, Menu, X } from "lucide-react";
 
 const LOGO_URL = "/logo.png";
 const MARQUEE_WORDS = ["Aprende", "Enseña", "Sube de nivel", "Gana XP", "Desbloquea insignias", "Escala el ranking"];
@@ -11,18 +11,22 @@ export default function Landing() {
   const { theme, toggle } = useTheme();
   const dark = theme === "dark";
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <div className="min-h-screen grain" style={{ background: dark ? "#18181b" : "#F5F1E4", color: dark ? "#fafafa" : "#1F5A2A" }}>
       {/* Top nav */}
-      <header className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src={LOGO_URL} alt="NUMA" className="w-12 h-12 nb-border nb-shadow-sm object-cover bg-white" />
+      <header className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <img src={LOGO_URL} alt="NUMA" className="w-10 h-10 sm:w-12 sm:h-12 nb-border nb-shadow-sm object-cover bg-white" />
           <div className="leading-tight">
-            <div className="font-display font-black text-2xl">NUMA</div>
-            <div className="label-caps text-[0.6rem]" style={{ color: dark ? "#a1a1aa" : "#3E8E41" }}>Plantas & Bienestar</div>
+            <div className="font-display font-black text-xl sm:text-2xl">NUMA</div>
+            <div className="label-caps text-[0.55rem] sm:text-[0.6rem]" style={{ color: dark ? "#a1a1aa" : "#3E8E41" }}>Plantas & Bienestar</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Desktop nav */}
+        <div className="hidden sm:flex items-center gap-2">
           <button
             onClick={toggle}
             className="px-3 py-2 nb-border nb-press"
@@ -35,7 +39,39 @@ export default function Landing() {
           <Link to="/login"><NBButton variant="ghost" data-testid="landing-login-btn">Entrar</NBButton></Link>
           <Link to="/register"><NBButton variant="dark" data-testid="landing-register-btn">Registrarse</NBButton></Link>
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          className="sm:hidden p-2 nb-border nb-press"
+          style={{ background: dark ? "#27272a" : "white", color: dark ? "#fafafa" : "#1F5A2A" }}
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Menu"
+        >
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </header>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="sm:hidden px-4 pb-4 space-y-2" style={{ borderBottom: `2px solid ${dark ? "#3f3f46" : "#1F5A2A"}` }}>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggle}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 nb-border nb-press"
+              style={{ background: dark ? "#27272a" : "white", color: dark ? "#fafafa" : "#1F5A2A" }}
+            >
+              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              <span className="text-sm font-bold">{dark ? "Modo claro" : "Modo oscuro"}</span>
+            </button>
+          </div>
+          <Link to="/login" onClick={() => setMobileOpen(false)} className="block">
+            <NBButton variant="ghost" className="w-full" data-testid="landing-login-btn">Entrar</NBButton>
+          </Link>
+          <Link to="/register" onClick={() => setMobileOpen(false)} className="block">
+            <NBButton variant="dark" className="w-full" data-testid="landing-register-btn">Registrarse</NBButton>
+          </Link>
+        </div>
+      )}
 
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-6 pt-8 pb-20 grid lg:grid-cols-12 gap-10 items-start">

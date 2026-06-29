@@ -37,7 +37,7 @@ export function DashboardSkeleton() {
         <div className="md:col-span-3 nb-border bg-white p-6 space-y-3">
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-10 w-20" />
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {[...Array(6)].map((_, i) => (
               <Skeleton key={i} className="aspect-square" />
             ))}

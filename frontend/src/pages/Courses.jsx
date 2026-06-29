@@ -72,7 +72,7 @@ export function Courses() {
         </div>
 
         {isTeacher && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button onClick={() => setTab("mine")}
               className={`flex items-center gap-2 px-4 py-2 font-display font-black uppercase text-sm border-2 border-[#1F5A2A] transition-all ${tab === "mine" ? "bg-[#1F5A2A] text-white" : "bg-white text-[#1F5A2A] hover:bg-[#1F5A2A]/10"}`}
               data-testid="courses-tab-mine">

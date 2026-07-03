@@ -7,7 +7,7 @@ import Navbar from "../components/Navbar";
 import AIChatbot from "../components/AIChatbot";
 import { NBCard, NBButton, NBBadge } from "../components/nb";
 import ReactMarkdown from "react-markdown";
-import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, ArrowLeft, Pencil, Download, HardDriveDownload, Check, Trophy, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, Calendar, Users, Target, Award } from "lucide-react";
+import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, ArrowLeft, Pencil, Download, HardDriveDownload, Check, Trophy, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { markCourseOffline, isCourseOffline, markFileOffline, isFileOffline, precacheFile } from "../lib/offline";
 
@@ -25,7 +25,7 @@ export default function CourseDetail() {
   const [downloading, setDownloading] = useState(false);
   const [offlineFiles, setOfflineFiles] = useState({});
   const [expandedLesson, setExpandedLesson] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileNav, setMobileNav] = useState(false);
 
   const load = async () => {
     const { data: c } = await api.get(`/courses/${id}`);
@@ -102,9 +102,33 @@ export default function CourseDetail() {
     { id: "activities", label: "Actividades", icon: ClipboardList, count: activities.length },
   ];
 
-  const cardBg = dark ? "#27272a" : "#fff";
   const textColor = dark ? "#fafafa" : "#1F5A2A";
   const mutedColor = dark ? "#a1a1aa" : "#3E5A3E";
+  const borderColor = dark ? "#3f3f46" : "#e5e7eb";
+
+  const SidebarContent = () => (
+    <NBCard className="p-0 overflow-hidden">
+      <div className="p-3 font-display font-black text-sm uppercase tracking-wider" style={{ background: "#1F5A2A", color: "#fff" }}>
+        Secciones
+      </div>
+      {sections.map((s) => (
+        <button
+          key={s.id}
+          onClick={() => { setActiveSection(s.id); setMobileNav(false); }}
+          className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm font-bold border-b transition-colors"
+          style={{
+            background: activeSection === s.id ? (dark ? "#3f3f46" : "#e8f5e9") : "transparent",
+            color: activeSection === s.id ? "#8BC34A" : mutedColor,
+            borderColor,
+          }}
+        >
+          <s.icon className="w-4 h-4" />
+          <span className="flex-1">{s.label}</span>
+          {s.count !== undefined && <span className="font-mono text-xs opacity-60">{s.count}</span>}
+        </button>
+      ))}
+    </NBCard>
+  );
 
   return (
     <div className="min-h-screen grain" style={{ background: dark ? "#18181b" : "#F5F1E4" }}>
@@ -146,84 +170,60 @@ export default function CourseDetail() {
         </div>
       </div>
 
+      {/* Mobile section selector */}
+      <div className="lg:hidden border-b-2 overflow-x-auto" style={{ borderColor: dark ? "#3f3f46" : "#1F5A2A" }}>
+        <div className="flex">
+          {sections.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setActiveSection(s.id)}
+              className="flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider whitespace-nowrap border-b-2 transition-colors"
+              style={{
+                borderColor: activeSection === s.id ? "#8BC34A" : "transparent",
+                background: activeSection === s.id ? (dark ? "#27272a" : "#e8f5e9") : "transparent",
+                color: activeSection === s.id ? "#8BC34A" : mutedColor,
+              }}
+            >
+              <s.icon className="w-3 h-3" /> {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 3-column layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex gap-6">
 
-          {/* Left Sidebar — Sections */}
-          <aside className={`${sidebarOpen ? "w-56" : "w-0"} flex-shrink-0 hidden lg:block transition-all duration-200`}>
-            <NBCard className="p-0 overflow-hidden">
-              <div className="p-3 font-display font-black text-sm uppercase tracking-wider" style={{ background: "#1F5A2A", color: "#fff" }}>
-                Secciones del curso
-              </div>
-              {sections.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setActiveSection(s.id)}
-                  className={`w-full text-left px-4 py-3 flex items-center gap-3 text-sm font-bold border-b transition-colors ${activeSection === s.id ? "" : ""}`}
-                  style={{
-                    background: activeSection === s.id ? (dark ? "#3f3f46" : "#e8f5e9") : "transparent",
-                    color: activeSection === s.id ? "#8BC34A" : mutedColor,
-                    borderColor: dark ? "#3f3f46" : "#e5e7eb",
-                  }}
-                >
-                  <s.icon className="w-4 h-4" />
-                  <span className="flex-1">{s.label}</span>
-                  {s.count !== undefined && <span className="font-mono text-xs opacity-60">{s.count}</span>}
-                </button>
-              ))}
-            </NBCard>
+          {/* Left Sidebar — Desktop only */}
+          <aside className="w-56 flex-shrink-0 hidden lg:block">
+            <div className="sticky top-24">
+              <SidebarContent />
+            </div>
           </aside>
-
-          {/* Mobile sidebar toggle */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden fixed bottom-20 left-4 z-50 nb-border nb-press p-2"
-            style={{ background: cardBg }}
-          >
-            {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          </button>
 
           {/* Main Content */}
           <div className="flex-1 min-w-0 space-y-4">
-            {/* Description */}
-            {activeSection === "general" && (
-              <>
-                <NBCard className="p-6">
-                  <div className="font-display font-black text-xl mb-3" style={{ color: textColor }}>Descripción del curso</div>
-                  <p style={{ color: mutedColor }}>{course.description}</p>
-                </NBCard>
 
-                {/* Quick links */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { label: "Lecciones", count: lessons.length, icon: BookOpen, section: "lessons", color: "#8BC34A" },
-                    { label: "Recursos", count: resources.length, icon: FileText, section: "resources", color: "#A5D6A7" },
-                    { label: "Actividades", count: activities.length, icon: ClipboardList, section: "activities", color: "#C5E1A5" },
-                    { label: "Ranking", count: null, icon: Trophy, link: `/courses/${id}/leaderboard`, color: "#FF6B6B" },
-                  ].map((item) => (
-                    <NBCard key={item.label} className="p-4 cursor-pointer nb-press" onClick={() => item.link ? null : setActiveSection(item.section)}>
-                      {item.link ? (
-                        <Link to={item.link} className="block">
-                          <div className="w-10 h-10 nb-border flex items-center justify-center mb-2" style={{ background: item.color }}>
-                            <item.icon className="w-5 h-5" style={{ color: "#1F5A2A" }} />
-                          </div>
-                          <div className="font-bold text-sm" style={{ color: textColor }}>{item.label}</div>
-                          {item.count !== null && <div className="font-mono text-xs" style={{ color: mutedColor }}>{item.count} items</div>}
-                        </Link>
-                      ) : (
-                        <>
-                          <div className="w-10 h-10 nb-border flex items-center justify-center mb-2" style={{ background: item.color }}>
-                            <item.icon className="w-5 h-5" style={{ color: "#1F5A2A" }} />
-                          </div>
-                          <div className="font-bold text-sm" style={{ color: textColor }}>{item.label}</div>
-                          <div className="font-mono text-xs" style={{ color: mutedColor }}>{item.count} items</div>
-                        </>
-                      )}
-                    </NBCard>
-                  ))}
+            {/* General */}
+            {activeSection === "general" && (
+              <NBCard className="p-6">
+                <div className="font-display font-black text-xl mb-3" style={{ color: textColor }}>Descripción del curso</div>
+                <p className="leading-relaxed" style={{ color: mutedColor }}>{course.description}</p>
+                <div className="mt-4 pt-4 border-t-2 flex flex-wrap gap-4 text-sm" style={{ borderColor }}>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" style={{ color: "#8BC34A" }} />
+                    <span style={{ color: mutedColor }}><strong style={{ color: textColor }}>{lessons.length}</strong> lecciones</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4" style={{ color: "#A5D6A7" }} />
+                    <span style={{ color: mutedColor }}><strong style={{ color: textColor }}>{resources.length}</strong> recursos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="w-4 h-4" style={{ color: "#C5E1A5" }} />
+                    <span style={{ color: mutedColor }}><strong style={{ color: textColor }}>{activities.length}</strong> actividades</span>
+                  </div>
                 </div>
-              </>
+              </NBCard>
             )}
 
             {/* Lessons — Accordion */}
@@ -242,7 +242,7 @@ export default function CourseDetail() {
                         {expandedLesson === l.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                       </button>
                       {expandedLesson === l.id && (
-                        <div className="px-5 pb-5 pt-0 border-t-2" style={{ borderColor: dark ? "#3f3f46" : "#e5e7eb" }}>
+                        <div className="px-5 pb-5 pt-0 border-t-2" style={{ borderColor }}>
                           <div className="mt-4 prose prose-sm max-w-none prose-headings:font-display prose-strong:text-[#1F5A2A] prose-a:text-[#2E8B7F]"
                             style={{ color: mutedColor }}>
                             <ReactMarkdown>{l.content}</ReactMarkdown>
@@ -321,46 +321,11 @@ export default function CourseDetail() {
             )}
           </div>
 
-          {/* Right Sidebar — Info */}
-          <aside className="w-64 flex-shrink-0 hidden xl:block space-y-4">
-            {/* Activities Summary */}
-            <NBCard className="p-0 overflow-hidden">
-              <div className="p-3 font-display font-black text-sm uppercase tracking-wider" style={{ background: "#1F5A2A", color: "#fff" }}>
-                Resumen
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 nb-border flex items-center justify-center" style={{ background: "#8BC34A" }}>
-                    <BookOpen className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm" style={{ color: textColor }}>Lecciones</div>
-                    <div className="font-mono text-xs" style={{ color: mutedColor }}>{lessons.length} publicadas</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 nb-border flex items-center justify-center" style={{ background: "#A5D6A7" }}>
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm" style={{ color: textColor }}>Recursos</div>
-                    <div className="font-mono text-xs" style={{ color: mutedColor }}>{resources.length} disponibles</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 nb-border flex items-center justify-center" style={{ background: "#C5E1A5" }}>
-                    <ClipboardList className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm" style={{ color: textColor }}>Actividades</div>
-                    <div className="font-mono text-xs" style={{ color: mutedColor }}>{activities.length} pendientes</div>
-                  </div>
-                </div>
-              </div>
-            </NBCard>
-
-            {/* Mini Calendar */}
-            <MiniCalendar dueDates={dueDates} dark={dark} textColor={textColor} mutedColor={mutedColor} />
+          {/* Right Sidebar — Calendar only */}
+          <aside className="w-64 flex-shrink-0 hidden xl:block">
+            <div className="sticky top-24">
+              <MiniCalendar dueDates={dueDates} dark={dark} textColor={textColor} mutedColor={mutedColor} />
+            </div>
           </aside>
         </div>
       </div>
@@ -378,7 +343,7 @@ function MiniCalendar({ dueDates, dark, textColor, mutedColor }) {
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
 
   const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-  const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+  const dayNames = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDay = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
@@ -418,10 +383,11 @@ function MiniCalendar({ dueDates, dark, textColor, mutedColor }) {
             return (
               <div
                 key={d}
-                className={`text-xs py-1 rounded font-mono ${isToday ? "font-bold" : ""}`}
+                className="text-xs py-1 rounded font-mono"
                 style={{
                   background: hasActivity ? "#8BC34A" : isToday ? (dark ? "#3f3f46" : "#e8f5e9") : "transparent",
                   color: hasActivity ? "#1F5A2A" : isToday ? textColor : mutedColor,
+                  fontWeight: isToday || hasActivity ? "bold" : "normal",
                 }}
                 title={hasActivity ? hasActivity.join(", ") : ""}
               >
@@ -430,6 +396,17 @@ function MiniCalendar({ dueDates, dark, textColor, mutedColor }) {
             );
           })}
         </div>
+        {Object.keys(dueDates).length > 0 && (
+          <div className="mt-3 pt-3 border-t text-xs" style={{ borderColor: dark ? "#3f3f46" : "#e5e7eb", color: mutedColor }}>
+            <div className="font-bold mb-1">Próximas entregas:</div>
+            {Object.entries(dueDates).slice(0, 3).map(([date, titles]) => (
+              <div key={date} className="flex items-center gap-1">
+                <Clock className="w-3 h-3" style={{ color: "#8BC34A" }} />
+                <span>{date}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </NBCard>
   );

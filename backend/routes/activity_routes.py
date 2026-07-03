@@ -67,7 +67,7 @@ async def list_activities(
 
     if user["role"] == "student":
         activities = await db.activities.find(
-            {"course_id": course_id, "status": "published"},
+            {"course_id": course_id, "$or": [{"status": "published"}, {"status": {"$exists": False}}]},
             {"_id": 0}
         ).to_list(200)
     else:

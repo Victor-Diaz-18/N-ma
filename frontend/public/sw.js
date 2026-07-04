@@ -1,4 +1,4 @@
-const CACHE_NAME = "numa-v1";
+const CACHE_NAME = "numa-v2";
 const PRECACHE_URLS = ["/", "/index.html"];
 
 // Install — precache shell
@@ -26,6 +26,22 @@ self.addEventListener("fetch", (e) => {
 
   // API requests — network first, fallback to cache
   if (url.pathname.startsWith("/api/")) {
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // HTML pages — network first (always get latest index.html with correct hashes)
+  if (url.pathname.endsWith(".html") || url.pathname === "/") {
     e.respondWith(
       fetch(e.request)
         .then((res) => {

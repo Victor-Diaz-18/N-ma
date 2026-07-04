@@ -1,14 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { api } from "../lib/api";
 import { useTheme } from "../lib/theme";
 import { useCourses } from "../hooks/useCourses";
 import { useStats, useUpcoming, useSubmissions } from "../hooks/useGamification";
 import Navbar from "../components/Navbar";
-import { NBCard, NBButton, NBBadge, NBProgress } from "../components/nb";
+import { NBCard, NBButton, NBBadge } from "../components/nb";
 import { DashboardSkeleton } from "../components/Skeleton";
-import { BookOpen, ClipboardList, Zap, Plus, FileCheck2, Award, CalendarClock, BarChart3 } from "lucide-react";
+import { BookOpen, ClipboardList, Plus, FileCheck2, Award, CalendarClock, BarChart3 } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -24,24 +23,8 @@ function StudentDashboard() {
   const { courses, loading: coursesLoading } = useCourses();
   const { submissions, loading: submissionsLoading } = useSubmissions();
   const { upcoming, loading: upcomingLoading } = useUpcoming();
-  const [courseXpList, setCourseXpList] = React.useState([]);
 
   const loading = statsLoading || coursesLoading || submissionsLoading || upcomingLoading;
-
-  React.useEffect(() => {
-    if (courses.length > 0) {
-      Promise.all(
-        courses.map(async (c) => {
-          try {
-            const { data } = await api.get(`/courses/${c.id}/my-xp`);
-            return { course: c, ...data };
-          } catch {
-            return { course: c, xp: 0, level: 1, next_level_xp: 100, progress_percent: 0 };
-          }
-        })
-      ).then(setCourseXpList);
-    }
-  }, [courses]);
 
   if (loading) {
     return (
@@ -65,18 +48,7 @@ function StudentDashboard() {
 
         {/* Bento grid */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-5">
-          <NBCard color="yellow" className="md:col-span-3 p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="label-caps">XP Total</div>
-                <div className="font-display font-black text-5xl mt-1">{courseXpList.reduce((s, c) => s + c.xp, 0)}</div>
-                <div className="font-mono text-sm mt-1">{courseXpList.length} cursos con XP</div>
-              </div>
-              <Zap className="w-14 h-14" strokeWidth={2.5} />
-            </div>
-          </NBCard>
-
-          <NBCard className="md:col-span-3 p-6">
+          <NBCard className="md:col-span-2 p-6">
             <div className="label-caps">Insignias ganadas</div>
             <div className="font-display font-black text-4xl">{stats?.earned_badges_count ?? 0} <span className="text-[#3E5A3E] text-xl">/ {stats?.badges?.length ?? 6}</span></div>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4">
@@ -98,40 +70,7 @@ function StudentDashboard() {
             <div className="font-display font-black text-5xl">{submissions.length}</div>
             <div className="font-mono text-sm">Tareas hechas</div>
           </NBCard>
-          <NBCard className="md:col-span-2 p-6">
-            <div className="label-caps">Cursos</div>
-            <div className="font-display font-black text-5xl">{courses.length}</div>
-            <div className="font-mono text-sm">Activos</div>
-          </NBCard>
         </div>
-
-        {/* Per-course XP cards */}
-        {courseXpList.length > 0 && (
-          <section>
-            <h2 className="font-display font-black text-2xl uppercase text-[#1F5A2A] mb-4 flex items-center gap-2">
-              <Zap className="w-6 h-6" /> XP por curso
-            </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {courseXpList.map((cx) => (
-                <Link key={cx.course.id} to={`/courses/${cx.course.id}`} className="block nb-press">
-                  <NBCard className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-display font-black">{cx.course.title}</div>
-                        <div className="text-xs" style={{ color: dark ? "#a1a1aa" : "#3E5A3E" }}>Nivel {cx.level}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-display font-black text-xl">{cx.xp} XP</div>
-                        <div className="text-xs" style={{ color: dark ? "#a1a1aa" : "#3E5A3E" }}>{cx.progress_percent}%</div>
-                      </div>
-                    </div>
-                    <div className="mt-2"><NBProgress value={cx.progress_percent} color="#8BC34A" /></div>
-                  </NBCard>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Upcoming activities */}
         <section>

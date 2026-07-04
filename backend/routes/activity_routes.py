@@ -275,7 +275,7 @@ async def submit_quiz(
         await db.submissions.insert_one(doc)
         await gamification.grant_badge(user["id"], "first_submission")
         if xp_awarded:
-            await gamification.add_xp(user["id"], xp_awarded)
+            await gamification.add_xp(user["id"], xp_awarded, course_id=activity["course_id"])
         if percent >= 90:
             await gamification.grant_badge(user["id"], "quiz_master")
 
@@ -373,7 +373,7 @@ async def grade_submission(
         xp_awarded = round(xp_reward * percent)
 
         if xp_awarded > 0:
-            await gamification.add_xp(sub["student_id"], xp_awarded)
+            await gamification.add_xp(sub["student_id"], xp_awarded, course_id=sub["course_id"])
         if percent >= 0.9:
             await gamification.grant_badge(sub["student_id"], "quiz_master")
 

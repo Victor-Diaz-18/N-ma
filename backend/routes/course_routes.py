@@ -410,12 +410,18 @@ async def course_leaderboard(
 
         average = round(total_score / max_possible * 100, 1) if max_possible > 0 else 0
 
+        course_xp_doc = await db.course_xp.find_one(
+            {"student_id": e["student_id"], "course_id": course_id}
+        )
+        course_xp = course_xp_doc.get("xp", 0) if course_xp_doc else 0
+        course_level = course_xp_doc.get("level", 1) if course_xp_doc else 1
+
         students.append({
             "id": student["id"],
             "name": student.get("name", ""),
             "avatar_color": student.get("avatar_color", "#FFE156"),
-            "xp": student.get("xp", 0),
-            "level": student.get("level", 1),
+            "xp": course_xp,
+            "level": course_level,
             "total_score": total_score,
             "max_possible": max_possible,
             "average": average,

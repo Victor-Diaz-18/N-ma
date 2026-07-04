@@ -12,13 +12,29 @@ export default function Profile() {
   const dark = theme === "dark";
   const [stats, setStats] = useState(null);
   const [teacherStats, setTeacherStats] = useState(null);
+  const [courseXpList, setCourseXpList] = useState([]);
 
   useEffect(() => {
     (async () => {
       try {
         if (user?.role === "student") {
-          const { data } = await api.get("/me/stats");
-          setStats(data);
+          const { data: statsData } = await api.get("/me/stats");
+          setStats(statsData);
+
+          const { data: enrollments } = await api.get("/courses/mine");
+          const courses = Array.isArray(enrollments) ? enrollments : [];
+          
+          const xpResults = await Promise.all(
+            courses.map(async (c) => {
+              try {
+                const { data } = await api.get(`/courses/${c.id}/my-xp`);
+                return { course: c, ...data };
+              } catch {
+                return { course: c, xp: 0, level: 1, next_level_xp: 100, progress_percent: 0 };
+              }
+            })
+          );
+          setCourseXpList(xpResults);
         } else if (user?.role === "teacher") {
           const { data } = await api.get("/me/teacher-stats");
           setTeacherStats(data);
@@ -48,24 +64,44 @@ export default function Profile() {
         {user.role === "student" && stats && (
           <>
             <div className="grid md:grid-cols-3 gap-5">
-              <NBCard color="yellow" className="p-6">
-                <Zap className="w-8 h-8 mb-2" strokeWidth={2.5} />
-                <div className="label-caps">Nivel</div>
-                <div className="font-display font-black text-5xl">{stats.level}</div>
-                <div className="label-caps mt-2">{stats.xp} XP ganados</div>
-              </NBCard>
               <NBCard color="purple" className="p-6">
-                <div className="label-caps">Siguiente nivel</div>
-                <div className="font-display font-black text-3xl mb-3">{stats.next_level_xp} XP</div>
-                <NBProgress value={stats.progress_percent} color="#8BC34A" />
+                <div className="label-caps">Insignias ganadas</div>
+                <div className="font-display font-black text-4xl">{stats.earned_badges_count} <span style={{ color: dark ? "#a1a1aa" : "#3E5A3E", fontSize: "1.2rem" }}>/ {stats.badges?.length || 6}</span></div>
               </NBCard>
               <NBCard color="teal" className="p-6">
                 <div className="label-caps">Estadísticas</div>
                 <div className="font-mono text-lg font-bold mt-2">{stats.courses_enrolled} cursos</div>
                 <div className="font-mono text-lg font-bold">{stats.submissions_count} tareas</div>
-                <div className="font-mono text-lg font-bold">{stats.earned_badges_count} insignias</div>
+              </NBCard>
+              <NBCard className="p-6">
+                <Zap className="w-8 h-8 mb-2" strokeWidth={2.5} />
+                <div className="label-caps">XP Total (todos cursos)</div>
+                <div className="font-display font-black text-5xl">{stats.xp}</div>
               </NBCard>
             </div>
+
+            {courseXpList.length > 0 && (
+              <section>
+                <h2 className="font-display font-black text-2xl uppercase mb-4" style={{ color: dark ? "#fafafa" : "#1F5A2A" }}>XP por curso</h2>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {courseXpList.map((cx) => (
+                    <NBCard key={cx.course.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-display font-black">{cx.course.title}</div>
+                          <div className="text-sm" style={{ color: dark ? "#a1a1aa" : "#3E5A3E" }}>Nivel {cx.level}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-display font-black text-xl">{cx.xp} XP</div>
+                          <div className="text-xs" style={{ color: dark ? "#a1a1aa" : "#3E5A3E" }}>{cx.progress_percent}% al Nivel {cx.level + 1}</div>
+                        </div>
+                      </div>
+                      <div className="mt-2"><NBProgress value={cx.progress_percent} color="#8BC34A" /></div>
+                    </NBCard>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section>
               <h2 className="font-display font-black text-2xl uppercase mb-4" style={{ color: dark ? "#fafafa" : "#1F5A2A" }}>Insignias</h2>

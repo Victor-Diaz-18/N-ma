@@ -8,7 +8,7 @@ import { useStats, useUpcoming, useSubmissions } from "../hooks/useGamification"
 import Navbar from "../components/Navbar";
 import { NBCard, NBButton, NBBadge, NBProgress } from "../components/nb";
 import { DashboardSkeleton } from "../components/Skeleton";
-import { BookOpen, Trophy, ClipboardList, Zap, Plus, FileCheck2, Award, CalendarClock, BarChart3 } from "lucide-react";
+import { BookOpen, ClipboardList, Zap, Plus, FileCheck2, Award, CalendarClock, BarChart3 } from "lucide-react";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -24,8 +24,24 @@ function StudentDashboard() {
   const { courses, loading: coursesLoading } = useCourses();
   const { submissions, loading: submissionsLoading } = useSubmissions();
   const { upcoming, loading: upcomingLoading } = useUpcoming();
+  const [courseXpList, setCourseXpList] = React.useState([]);
 
   const loading = statsLoading || coursesLoading || submissionsLoading || upcomingLoading;
+
+  React.useEffect(() => {
+    if (courses.length > 0) {
+      Promise.all(
+        courses.map(async (c) => {
+          try {
+            const { data } = await api.get(`/courses/${c.id}/my-xp`);
+            return { course: c, ...data };
+          } catch {
+            return { course: c, xp: 0, level: 1, next_level_xp: 100, progress_percent: 0 };
+          }
+        })
+      ).then(setCourseXpList);
+    }
+  }, [courses]);
 
   if (loading) {
     return (
@@ -52,15 +68,11 @@ function StudentDashboard() {
           <NBCard color="yellow" className="md:col-span-3 p-6">
             <div className="flex items-start justify-between">
               <div>
-                <div className="label-caps">Tu rango</div>
-                <div className="font-display font-black text-5xl mt-1">NV {stats?.level ?? "-"}</div>
-                <div className="font-mono text-sm mt-1">{stats?.xp ?? 0} XP totales</div>
+                <div className="label-caps">XP Total</div>
+                <div className="font-display font-black text-5xl mt-1">{courseXpList.reduce((s, c) => s + c.xp, 0)}</div>
+                <div className="font-mono text-sm mt-1">{courseXpList.length} cursos con XP</div>
               </div>
               <Zap className="w-14 h-14" strokeWidth={2.5} />
-            </div>
-            <div className="mt-4">
-              <div className="label-caps mb-1.5">Progreso al Nivel {stats ? stats.level + 1 : "?"}</div>
-              <NBProgress value={stats?.progress_percent ?? 0} color="#A5D6A7" />
             </div>
           </NBCard>
 
@@ -87,11 +99,39 @@ function StudentDashboard() {
             <div className="font-mono text-sm">Tareas hechas</div>
           </NBCard>
           <NBCard className="md:col-span-2 p-6">
-            <Trophy className="w-8 h-8 mb-2" />
-            <div className="label-caps">Clasificación</div>
-            <Link to="/leaderboard"><NBButton className="w-full mt-2" variant="dark" data-testid="dash-leaderboard-btn">Ver ranking</NBButton></Link>
+            <div className="label-caps">Cursos</div>
+            <div className="font-display font-black text-5xl">{courses.length}</div>
+            <div className="font-mono text-sm">Activos</div>
           </NBCard>
         </div>
+
+        {/* Per-course XP cards */}
+        {courseXpList.length > 0 && (
+          <section>
+            <h2 className="font-display font-black text-2xl uppercase text-[#1F5A2A] mb-4 flex items-center gap-2">
+              <Zap className="w-6 h-6" /> XP por curso
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {courseXpList.map((cx) => (
+                <Link key={cx.course.id} to={`/courses/${cx.course.id}`} className="block nb-press">
+                  <NBCard className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-display font-black">{cx.course.title}</div>
+                        <div className="text-xs" style={{ color: dark ? "#a1a1aa" : "#3E5A3E" }}>Nivel {cx.level}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-display font-black text-xl">{cx.xp} XP</div>
+                        <div className="text-xs" style={{ color: dark ? "#a1a1aa" : "#3E5A3E" }}>{cx.progress_percent}%</div>
+                      </div>
+                    </div>
+                    <div className="mt-2"><NBProgress value={cx.progress_percent} color="#8BC34A" /></div>
+                  </NBCard>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Upcoming activities */}
         <section>

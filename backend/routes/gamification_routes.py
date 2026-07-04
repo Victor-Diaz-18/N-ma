@@ -29,6 +29,17 @@ async def my_stats(
     return await gamification.get_user_stats(user["id"])
 
 
+@router.get("/courses/{course_id}/my-xp")
+async def my_course_xp(
+    course_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
+    gamification: GamificationService = Depends(get_gamification_service),
+):
+    user = await auth.get_current_user(request)
+    return await gamification.get_course_xp(user["id"], course_id)
+
+
 @router.get("/me/upcoming")
 async def upcoming_activities(
     request: Request,

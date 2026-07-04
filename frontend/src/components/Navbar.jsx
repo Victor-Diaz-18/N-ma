@@ -4,7 +4,7 @@ import { useAuth } from "../lib/auth";
 import { useTheme } from "../lib/theme";
 import OfflineIndicator from "./OfflineIndicator";
 import NotificationBell from "./NotificationBell";
-import { LogOut, Trophy, User, LayoutDashboard, BookOpen, Menu, X, Sun, Moon, WifiOff } from "lucide-react";
+import { LogOut, User, LayoutDashboard, BookOpen, Menu, X, Sun, Moon, WifiOff } from "lucide-react";
 
 const LOGO_URL = "/logo.png";
 
@@ -26,7 +26,6 @@ export default function Navbar() {
   const navLinks = [
     { to: "/dashboard", label: "Panel", icon: LayoutDashboard },
     { to: "/courses", label: "Cursos", icon: BookOpen },
-    { to: "/leaderboard", label: "Ranking", icon: Trophy },
     { to: "/offline", label: "Offline", icon: WifiOff },
     { to: "/profile", label: "Perfil", icon: User },
   ];
@@ -66,11 +65,6 @@ export default function Navbar() {
           >
             {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[#A5D6A7] nb-border" style={{ color: "#1F5A2A" }}>
-            <span className="font-mono text-xs font-bold" data-testid="nav-xp">{user.xp} XP</span>
-            <span className="w-px h-4" style={{ background: "#1F5A2A" }} />
-            <span className="font-mono text-xs font-bold" data-testid="nav-level">NV {user.level}</span>
-          </div>
           <button
             onClick={async () => { await logout(); nav("/login"); }}
             className="hidden sm:flex px-3 py-1.5 nb-border nb-press text-sm font-bold items-center gap-1"
@@ -106,11 +100,6 @@ export default function Navbar() {
               <link.icon className="w-4 h-4 inline mr-2" /> {link.label}
             </Link>
           ))}
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#A5D6A7] nb-border mt-2" style={{ color: "#1F5A2A" }}>
-            <span className="font-mono text-xs font-bold">{user.xp} XP</span>
-            <span className="w-px h-4" style={{ background: "#1F5A2A" }} />
-            <span className="font-mono text-xs font-bold">NV {user.level}</span>
-          </div>
           <button
             onClick={toggle}
             className="w-full px-4 py-3 nb-border nb-press text-sm font-bold flex items-center justify-center gap-2"

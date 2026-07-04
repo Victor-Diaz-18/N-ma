@@ -4,7 +4,7 @@ import { useAuth } from "../lib/auth";
 import { useTheme } from "../lib/theme";
 import OfflineIndicator from "./OfflineIndicator";
 import NotificationBell from "./NotificationBell";
-import { LogOut, Trophy, User, LayoutDashboard, BookOpen, Menu, X, Sun, Moon } from "lucide-react";
+import { LogOut, Trophy, User, LayoutDashboard, BookOpen, Menu, X, Sun, Moon, WifiOff } from "lucide-react";
 
 const LOGO_URL = "/logo.png";
 
@@ -27,6 +27,7 @@ export default function Navbar() {
     { to: "/dashboard", label: "Panel", icon: LayoutDashboard },
     { to: "/courses", label: "Cursos", icon: BookOpen },
     { to: "/leaderboard", label: "Ranking", icon: Trophy },
+    { to: "/offline", label: "Offline", icon: WifiOff },
     { to: "/profile", label: "Perfil", icon: User },
   ];
 

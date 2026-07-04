@@ -9,7 +9,7 @@ import { NBCard, NBButton, NBBadge } from "../components/nb";
 import ReactMarkdown from "react-markdown";
 import { FileText, LinkIcon, BookOpen, ClipboardList, CheckCircle2, Clock, ArrowRight, ArrowLeft, Pencil, Download, HardDriveDownload, Check, Trophy, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { markCourseOffline, isCourseOffline, markFileOffline, isFileOffline, precacheFile } from "../lib/offline";
+import { markCourseOffline, isCourseOffline, markFileOffline, isFileOffline, precacheFile, deleteCourseOffline } from "../lib/offline";
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -23,6 +23,7 @@ export default function CourseDetail() {
   const [activities, setActivities] = useState([]);
   const [offline, setOffline] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0 });
   const [offlineFiles, setOfflineFiles] = useState({});
   const [expandedLesson, setExpandedLesson] = useState(null);
   const [mobileNav, setMobileNav] = useState(false);
@@ -46,25 +47,36 @@ export default function CourseDetail() {
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const downloadCourseOffline = async () => {
+    const fileResources = resources.filter((r) => r.type === "file" && r.file_id);
     setDownloading(true);
+    setDownloadProgress({ current: 0, total: fileResources.length });
     try {
-      for (const r of resources) {
-        if (r.type === "file" && r.file_id) {
-          precacheFile(`${API}/files/${r.file_id}`);
-          await markFileOffline(r.file_id, { title: r.title, course_id: id });
-        }
+      for (let i = 0; i < fileResources.length; i++) {
+        const r = fileResources[i];
+        precacheFile(`${API}/files/${r.file_id}`);
+        await markFileOffline(r.file_id, { title: r.title, course_id: id });
+        setDownloadProgress({ current: i + 1, total: fileResources.length });
       }
-      await markCourseOffline(id, { title: course.title, subject: course.subject });
+      await markCourseOffline(id, { title: course.title, subject: course.subject, cover_color: course.cover_color });
       setOffline(true);
       const fmap = { ...offlineFiles };
-      for (const r of resources) if (r.type === "file" && r.file_id) fmap[r.file_id] = true;
+      for (const r of fileResources) fmap[r.file_id] = true;
       setOfflineFiles(fmap);
-      toast.success("Curso disponible sin conexión");
+      toast.success("Curso listo para usar sin conexión");
     } catch (e) {
       toast.error("No se pudo descargar el curso");
     } finally {
       setDownloading(false);
+      setDownloadProgress({ current: 0, total: 0 });
     }
+  };
+
+  const removeOffline = async () => {
+    if (!window.confirm("¿Eliminar este curso del almacenamiento offline?")) return;
+    await deleteCourseOffline(id);
+    setOffline(false);
+    setOfflineFiles({});
+    toast.success("Curso eliminado del almacenamiento offline");
   };
 
   const downloadResource = async (r) => {
@@ -159,10 +171,20 @@ export default function CourseDetail() {
             )}
             {course.is_enrolled && (
               offline ? (
-                <NBBadge color="#2E8B7F" className="flex items-center gap-1"><Check className="w-3 h-3" /> Offline listo</NBBadge>
+                <div className="flex items-center gap-2">
+                  <NBBadge color="#2E8B7F" className="flex items-center gap-1"><Check className="w-3 h-3" /> Offline listo</NBBadge>
+                  <button onClick={removeOffline} className="label-caps underline text-xs font-bold" style={{ color: "#FF6B6B" }}>
+                    Eliminar offline
+                  </button>
+                </div>
               ) : (
                 <NBButton variant="teal" onClick={downloadCourseOffline} disabled={downloading}>
-                  <HardDriveDownload className="inline w-4 h-4 mr-1" /> {downloading ? "Descargando..." : "Offline"}
+                  <HardDriveDownload className="inline w-4 h-4 mr-1" />
+                  {downloading
+                    ? downloadProgress.total > 0
+                      ? `Descargando ${downloadProgress.current}/${downloadProgress.total}...`
+                      : "Descargando..."
+                    : "Descargar offline"}
                 </NBButton>
               )
             )}

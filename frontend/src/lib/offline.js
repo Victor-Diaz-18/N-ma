@@ -81,8 +81,39 @@ export async function listOfflineCourses() {
   return db.getAll("downloaded_courses");
 }
 
+// Delete a course from offline storage
+export async function deleteCourseOffline(courseId) {
+  const db = await getDB();
+  await db.delete("downloaded_courses", courseId);
+  // Also remove cached API responses for this course
+  const tx = db.transaction("api_cache", "readwrite");
+  const store = tx.objectStore("api_cache");
+  const all = await store.getAll();
+  for (const row of all) {
+    if (row.key && row.key.includes(courseId)) {
+      await store.delete(row.key);
+    }
+  }
+  await tx.done;
+}
+
 // Tell the service worker to pre-cache a file URL
 export function precacheFile(url) {
   if (!navigator.serviceWorker?.controller) return;
   navigator.serviceWorker.controller.postMessage({ type: "PRECACHE_FILE", url });
+}
+
+// Get cache storage size estimate
+export async function getOfflineSize() {
+  if (!navigator.storage?.estimate) return { used: 0, quota: 0 };
+  const est = await navigator.storage.estimate();
+  return { used: est.usage || 0, quota: est.quota || 0 };
+}
+
+export function formatBytes(bytes) {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }

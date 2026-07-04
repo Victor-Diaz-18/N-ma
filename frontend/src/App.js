@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/lib/theme";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RateLimitBanner from "@/components/RateLimitBanner";
+import OfflineIndicator from "@/components/OfflineIndicator";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -17,6 +18,7 @@ import CourseManage from "@/pages/CourseManage";
 import ActivityDetail from "@/pages/ActivityDetail";
 import Profile from "@/pages/Profile";
 import Leaderboard from "@/pages/Leaderboard";
+import OfflineCourses from "@/pages/OfflineCourses";
 
 function PageTransition({ children }) {
   const location = useLocation();
@@ -42,6 +44,7 @@ function App() {
             <BrowserRouter>
               <Toaster position="top-right" toastOptions={{ style: { border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 0 #0A0A0A", borderRadius: "4px", fontWeight: 600 }}} />
             <RateLimitBanner />
+            <OfflineIndicator />
               <PageTransition>
                 <Routes>
                   <Route path="/" element={<RootRoute />} />
@@ -56,6 +59,7 @@ function App() {
                   <Route path="/activities/:id" element={<ProtectedRoute><ActivityDetail /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+                  <Route path="/offline" element={<ProtectedRoute><OfflineCourses /></ProtectedRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </PageTransition>

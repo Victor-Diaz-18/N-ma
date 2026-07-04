@@ -1,60 +1,50 @@
-import React, { useEffect, useState } from "react";
-import { Wifi, WifiOff, RefreshCw } from "lucide-react";
-import { pendingCount, syncPending } from "../lib/sync";
+import { useState, useEffect } from "react";
+import { WifiOff, RefreshCw } from "lucide-react";
+import { pendingCount } from "@/lib/sync";
 
 export default function OfflineIndicator() {
   const [online, setOnline] = useState(navigator.onLine);
   const [pending, setPending] = useState(0);
-  const [syncing, setSyncing] = useState(false);
-
-  const refreshCount = async () => setPending(await pendingCount());
 
   useEffect(() => {
-    const onUp = () => setOnline(true);
-    const onDown = () => setOnline(false);
-    window.addEventListener("online", onUp);
-    window.addEventListener("offline", onDown);
-    refreshCount();
-    const t = setInterval(refreshCount, 5000);
+    const goOnline = () => setOnline(true);
+    const goOffline = () => setOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
     return () => {
-      window.removeEventListener("online", onUp);
-      window.removeEventListener("offline", onDown);
-      clearInterval(t);
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
     };
   }, []);
 
-  const handleSync = async () => {
-    setSyncing(true);
-    await syncPending();
-    await refreshCount();
-    setSyncing(false);
-  };
+  useEffect(() => {
+    const check = async () => setPending(await pendingCount());
+    check();
+    const interval = setInterval(check, 10000);
+    return () => clearInterval(interval);
+  }, [online]);
 
-  if (online && pending === 0) {
-    return (
-      <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 nb-border bg-[#C5E1A5]" data-testid="offline-indicator-online" title="En línea" style={{ color: "#1F5A2A" }}>
-        <Wifi className="w-3.5 h-3.5" strokeWidth={2.5} />
-        <span className="font-mono text-[0.65rem] font-bold">EN LÍNEA</span>
-      </div>
-    );
-  }
+  if (online && pending === 0) return null;
 
   return (
-    <button
-      onClick={online ? handleSync : undefined}
-      className={`flex items-center gap-1.5 px-2.5 py-1 nb-border ${online ? "bg-[#8BC34A] nb-press" : "bg-[#FF6B6B] text-white"}`}
-      data-testid={online ? "offline-indicator-pending" : "offline-indicator-offline"}
-      title={online ? "Sincronizar entregas pendientes" : "Sin conexión - las entregas se guardarán localmente"}
+    <div
+      className="fixed top-0 left-0 right-0 z-[9999] px-4 py-2 flex items-center justify-center gap-2 text-sm font-bold"
+      style={{
+        background: online ? "#8BC34A" : "#FF6B6B",
+        color: online ? "#1F5A2A" : "#fff",
+      }}
     >
       {online ? (
-        syncing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" strokeWidth={2.5} />
-                : <RefreshCw className="w-3.5 h-3.5" strokeWidth={2.5} />
+        <>
+          <RefreshCw className="w-4 h-4 animate-spin" />
+          Sincronizando {pending} entrega{pending !== 1 ? "s" : ""} pendiente{pending !== 1 ? "s" : ""}...
+        </>
       ) : (
-        <WifiOff className="w-3.5 h-3.5" strokeWidth={2.5} />
+        <>
+          <WifiOff className="w-4 h-4" />
+          Sin conexión — el contenido offline está disponible
+        </>
       )}
-      <span className="font-mono text-[0.65rem] font-bold">
-        {online ? (pending > 0 ? `${pending} POR SINCR.` : "SINCR.") : "SIN CONEXIÓN"}
-      </span>
-    </button>
+    </div>
   );
 }

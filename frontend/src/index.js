@@ -11,5 +11,12 @@ root.render(
   </React.StrictMode>,
 );
 
+// Register service worker for offline support
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
 // Install background sync for queued submissions
 installSyncListeners();

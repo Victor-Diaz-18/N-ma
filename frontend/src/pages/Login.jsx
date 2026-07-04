@@ -5,6 +5,7 @@ import { NBButton, NBCard, NBInput } from "../components/nb";
 import { toast } from "sonner";
 import { loginSchema } from "../lib/validations";
 import { useFormValidation } from "../hooks/useFormValidation";
+import { Eye, EyeOff } from "lucide-react";
 
 const LOGO_URL = "/logo.png";
 
@@ -13,6 +14,7 @@ export default function Login() {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { errors, touched, validate, validateField, touchField } = useFormValidation(loginSchema);
@@ -72,15 +74,26 @@ export default function Login() {
             </div>
             <div>
               <label className="label-caps block mb-1.5">Contraseña</label>
-              <NBInput
-                type="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); validateField("password", { ...formData, password: e.target.value }); }}
-                onBlur={() => touchField("password")}
-                placeholder="••••••••"
-                className={errors.password && touched.password ? "border-[#FF6B6B]" : ""}
-                data-testid="login-password-input"
-              />
+              <div className="relative">
+                <NBInput
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); validateField("password", { ...formData, password: e.target.value }); }}
+                  onBlur={() => touchField("password")}
+                  placeholder="••••••••"
+                  className={`${errors.password && touched.password ? "border-[#FF6B6B]" : ""} pr-10`}
+                  data-testid="login-password-input"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#3E5A3E] hover:text-[#1F5A2A]"
+                  tabIndex={-1}
+                  data-testid="login-toggle-password"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {errors.password && touched.password && (
                 <p className="text-[#FF6B6B] text-xs mt-1 font-medium" data-testid="login-password-error">{errors.password}</p>
               )}

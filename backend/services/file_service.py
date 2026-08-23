@@ -68,3 +68,28 @@ class FileService:
         if not f:
             raise HTTPException(status_code=404, detail="File not found")
         return f
+
+    async def get_authorized_file(self, file_id: str, user: dict) -> dict:
+        f = await self.get_file(file_id)
+
+        if f["owner_id"] == user["id"]:
+            return f
+
+        resource = await self.db.resources.find_one({"file_id": file_id})
+        if resource:
+            course = await self.db.courses.find_one({"id": resource["course_id"]})
+            if course and course["teacher_id"] == user["id"]:
+                return f
+            enrolled = await self.db.enrollments.find_one(
+                {"course_id": resource["course_id"], "student_id": user["id"]}
+            )
+            if enrolled:
+                return f
+
+        submission = await self.db.submissions.find_one({"file_id": file_id})
+        if submission:
+            course = await self.db.courses.find_one({"id": submission["course_id"]})
+            if course and course["teacher_id"] == user["id"]:
+                return f
+
+        raise HTTPException(status_code=403, detail="No tienes acceso a este archivo")

@@ -32,9 +32,12 @@ async def upload_file(
 @router.get("/files/{file_id}")
 async def get_file(
     file_id: str,
+    request: Request,
+    auth: AuthService = Depends(get_auth_service),
     file_svc: FileService = Depends(get_file_service),
 ):
-    f = await file_svc.get_file(file_id)
+    user = await auth.get_current_user(request)
+    f = await file_svc.get_authorized_file(file_id, user)
     data = base64.b64decode(f["data_b64"])
     return StreamingResponse(
         io.BytesIO(data),

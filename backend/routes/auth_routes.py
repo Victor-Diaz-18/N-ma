@@ -3,6 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from models.user import UserCreate, UserLogin
 from services.auth_service import AuthService
+from middleware.rate_limiter import limiter
 from config import get_settings
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -13,7 +14,9 @@ def get_auth_service(request: Request) -> AuthService:
 
 
 @router.post("/register")
+@limiter.limit("10/minute")
 async def register(
+    request: Request,
     data: UserCreate,
     response: Response,
     auth: AuthService = Depends(get_auth_service),
@@ -25,7 +28,9 @@ async def register(
 
 
 @router.post("/login")
+@limiter.limit("10/minute")
 async def login(
+    request: Request,
     data: UserLogin,
     response: Response,
     auth: AuthService = Depends(get_auth_service),

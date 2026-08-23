@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, Literal
 from services.auth_service import AuthService
+from middleware.rate_limiter import limiter
 
 router = APIRouter(prefix="/api", tags=["ai"])
 
@@ -26,9 +27,10 @@ def get_ai_service(request: Request):
 
 
 @router.post("/ai/generate-activity")
+@limiter.limit("10/minute")
 async def generate_activity(
-    data: ActivityGenerateRequest,
     request: Request,
+    data: ActivityGenerateRequest,
 ):
     auth = get_auth_service(request)
     user = await auth.require_role(request, "teacher")
@@ -65,9 +67,10 @@ async def generate_activity(
 
 
 @router.post("/ai/chat")
+@limiter.limit("10/minute")
 async def chat(
-    data: ChatRequest,
     request: Request,
+    data: ChatRequest,
 ):
     auth = get_auth_service(request)
     user = await auth.get_current_user(request)

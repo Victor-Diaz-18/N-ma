@@ -31,6 +31,7 @@ class CourseService:
             "created_at": self.now_iso(),
         }
         await self.db.courses.insert_one(doc)
+        doc.pop("_id", None)
         return doc
 
     async def list_courses(self, user_id: str, skip: int = 0, limit: int = 12) -> List[dict]:

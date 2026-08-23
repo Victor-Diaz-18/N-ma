@@ -140,8 +140,20 @@ async def list_lessons(
     request: Request,
     auth: AuthService = Depends(get_auth_service),
 ):
-    await auth.get_current_user(request)
+    user = await auth.get_current_user(request)
     db: AsyncIOMotorDatabase = request.app.state.db
+
+    course = await db.courses.find_one({"id": course_id})
+    if not course:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Curso no encontrado")
+
+    is_owner = course["teacher_id"] == user["id"]
+    is_enrolled = await db.enrollments.find_one({"course_id": course_id, "student_id": user["id"]})
+    if not is_owner and not is_enrolled:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="No tienes acceso a este curso")
+
     return await db.lessons.find({"course_id": course_id}, {"_id": 0}).sort("order", 1).to_list(200)
 
 
@@ -206,8 +218,20 @@ async def list_resources(
     request: Request,
     auth: AuthService = Depends(get_auth_service),
 ):
-    await auth.get_current_user(request)
+    user = await auth.get_current_user(request)
     db: AsyncIOMotorDatabase = request.app.state.db
+
+    course = await db.courses.find_one({"id": course_id})
+    if not course:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Curso no encontrado")
+
+    is_owner = course["teacher_id"] == user["id"]
+    is_enrolled = await db.enrollments.find_one({"course_id": course_id, "student_id": user["id"]})
+    if not is_owner and not is_enrolled:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="No tienes acceso a este curso")
+
     return await db.resources.find({"course_id": course_id}, {"_id": 0}).to_list(200)
 
 

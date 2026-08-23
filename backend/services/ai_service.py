@@ -119,7 +119,7 @@ Genera la tarea ahora:"""
 
         prompt = prompts.get(activity_type, prompts["quiz"])
 
-        response = self.client.models.generate_content(model=self.model, contents=prompt)
+        response = await self.client.aio.models.generate_content(model=self.model, contents=prompt)
         text = response.text.strip()
 
         if text.startswith("```"):
@@ -177,5 +177,5 @@ PREGUNTA DEL ESTUDIANTE: {question}
 
 RESPUESTA:"""
 
-        response = self.client.models.generate_content(model=self.model, contents=prompt)
+        response = await self.client.aio.models.generate_content(model=self.model, contents=prompt)
         return response.text.strip()

@@ -79,6 +79,14 @@ class GamificationService:
                 "level": new_level,
             })
 
+        user = await self.db.users.find_one({"id": user_id}, {"_id": 0})
+        if user:
+            new_global_xp = user.get("xp", 0) + amount
+            new_global_level = self.xp_to_level(new_global_xp)
+            await self.db.users.update_one(
+                {"id": user_id}, {"$set": {"xp": new_global_xp, "level": new_global_level}}
+            )
+
         if new_level >= 5:
             await self.grant_badge(user_id, "level_5")
         if new_level >= 10:

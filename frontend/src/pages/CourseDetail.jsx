@@ -27,10 +27,21 @@ export default function CourseDetail() {
   const [offlineFiles, setOfflineFiles] = useState({});
   const [expandedLesson, setExpandedLesson] = useState(null);
   const [mobileNav, setMobileNav] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   const load = async () => {
     const { data: c } = await api.get(`/courses/${id}`);
     setCourse(c);
+
+    const canViewContent = c.is_owner || c.is_enrolled;
+    setLocked(!canViewContent);
+    if (!canViewContent) {
+      // Not enrolled and not the owner: lessons/resources are private until enrollment.
+      const { data: as } = await api.get(`/courses/${id}/activities`);
+      setActivities(as);
+      return;
+    }
+
     const [ls, rs, as] = await Promise.all([
       api.get(`/courses/${id}/lessons`),
       api.get(`/courses/${id}/resources`),
@@ -251,7 +262,8 @@ export default function CourseDetail() {
             {/* Lessons — Accordion */}
             {activeSection === "lessons" && (
               <div className="space-y-3">
-                {lessons.length === 0 ? <Empty text="Aún no hay lecciones." dark={dark} /> :
+                {locked ? <Empty text="Inscríbete en el curso para ver el contenido." dark={dark} /> :
+                  lessons.length === 0 ? <Empty text="Aún no hay lecciones." dark={dark} /> :
                   lessons.map((l, i) => (
                     <NBCard key={l.id} className="overflow-hidden">
                       <button
@@ -279,7 +291,8 @@ export default function CourseDetail() {
             {/* Resources */}
             {activeSection === "resources" && (
               <div className="space-y-3">
-                {resources.length === 0 ? <Empty text="Aún no hay recursos." dark={dark} /> :
+                {locked ? <Empty text="Inscríbete en el curso para ver los recursos." dark={dark} /> :
+                  resources.length === 0 ? <Empty text="Aún no hay recursos." dark={dark} /> :
                   resources.map((r) => (
                     <NBCard key={r.id} className="p-4 flex items-start gap-3">
                       <div className="w-10 h-10 nb-border flex items-center justify-center flex-shrink-0" style={{ background: r.type === "link" ? "#A5D6A7" : "#C5E1A5" }}>

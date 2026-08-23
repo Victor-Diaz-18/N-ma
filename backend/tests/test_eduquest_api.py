@@ -84,7 +84,7 @@ def test_11_create_course_student_forbidden():
 def test_12_list_courses_has_enrollment_fields():
     r = requests.get(f"{API}/courses", headers=_h(state["student_token"]))
     assert r.status_code == 200
-    found = [c for c in r.json() if c["id"] == state["course_id"]]
+    found = [c for c in r.json()["items"] if c["id"] == state["course_id"]]
     assert found and "student_count" in found[0] and "is_enrolled" in found[0]
     assert found[0]["is_enrolled"] is False
 
@@ -134,7 +134,11 @@ def test_30_upload_file():
     state["file_id"] = r.json()["id"]
 
 def test_31_get_file_stream():
-    r = requests.get(f"{API}/files/{state['file_id']}")
+    # Anonymous access must be rejected now that /files/{id} requires auth + ownership.
+    anon = requests.get(f"{API}/files/{state['file_id']}")
+    assert anon.status_code == 401
+
+    r = requests.get(f"{API}/files/{state['file_id']}", headers=_h(state["teacher_token"]))
     assert r.status_code == 200 and r.content == b"hello world"
 
 def test_32_resource_link():
@@ -166,7 +170,7 @@ def test_41_create_quiz():
 
 def test_42_quiz_without_questions_fails():
     r = requests.post(f"{API}/courses/{state['course_id']}/activities", headers=_h(state["teacher_token"]),
-                      json={"title":"Bad","description":"","type":"quiz"})
+                      json={"title":"Bad","description":"D","type":"quiz"})
     assert r.status_code == 400
 
 def test_43_list_activities_hides_correct_index_for_student():
@@ -239,7 +243,7 @@ def test_60_my_stats_badges():
 def test_61_leaderboard_has_me_flag():
     r = requests.get(f"{API}/leaderboard", headers=_h(state["student_token"]))
     assert r.status_code == 200
-    lb = r.json()
+    lb = r.json()["items"]
     mine = [x for x in lb if x["is_me"]]
     assert mine and mine[0]["id"] == state["student_id"]
     # sorted desc

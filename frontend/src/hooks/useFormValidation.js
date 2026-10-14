@@ -39,10 +39,17 @@ export function useFormValidation(schema) {
     setTouched((prev) => ({ ...prev, [name]: true }));
   };
 
+  const touchAll = (names) => {
+    setTouched((prev) => ({
+      ...prev,
+      ...names.reduce((acc, name) => ({ ...acc, [name]: true }), {}),
+    }));
+  };
+
   const reset = () => {
     setErrors({});
     setTouched({});
   };
 
-  return { errors, touched, validate, validateField, touchField, reset };
+  return { errors, touched, validate, validateField, touchField, touchAll, reset };
 }

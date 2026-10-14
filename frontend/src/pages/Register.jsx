@@ -20,14 +20,17 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { errors, touched, validate, validateField, touchField } = useFormValidation(registerSchema);
+  const { errors, touched, validate, validateField, touchField, touchAll } = useFormValidation(registerSchema);
 
   const formData = { name, email, password };
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!validate(formData)) return;
+    if (!validate(formData)) {
+      touchAll(["name", "email", "password"]);
+      return;
+    }
     setLoading(true);
     try {
       const u = await register({ name, email, password, role });

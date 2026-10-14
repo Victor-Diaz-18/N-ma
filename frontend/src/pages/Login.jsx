@@ -17,14 +17,17 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { errors, touched, validate, validateField, touchField } = useFormValidation(loginSchema);
+  const { errors, touched, validate, validateField, touchField, touchAll } = useFormValidation(loginSchema);
 
   const formData = { email, password };
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!validate(formData)) return;
+    if (!validate(formData)) {
+      touchAll(["email", "password"]);
+      return;
+    }
     setLoading(true);
     try {
       const u = await login(email, password);

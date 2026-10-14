@@ -58,7 +58,7 @@ def test_02_sample_course_exists_with_expected_structure():
     1 quiz (4 questions), 1 assignment."""
     r = requests.get(f"{API}/courses", headers=_h(state["teacher_token"]))
     assert r.status_code == 200
-    courses = r.json()
+    courses = r.json()["items"]
     target = [c for c in courses if c["title"] == "Plantas Medicinales 101"]
     assert len(target) >= 1, "Seeded course 'Plantas Medicinales 101' not found"
     course = target[0]
@@ -239,9 +239,11 @@ def test_11_me_stats_badges_localized_spanish():
 def test_12_regression_leaderboard_and_my_stats_and_my_submissions():
     h = _h(state["student_token"])
     r1 = requests.get(f"{API}/leaderboard", headers=h)
-    assert r1.status_code == 200 and isinstance(r1.json(), list)
+    assert r1.status_code == 200
+    lb_items = r1.json()["items"]
+    assert isinstance(lb_items, list)
     # student appears with is_me True
-    me_rows = [u for u in r1.json() if u.get("id") == state["student_id"]]
+    me_rows = [u for u in lb_items if u.get("id") == state["student_id"]]
     assert me_rows and me_rows[0]["is_me"] is True
 
     r2 = requests.get(f"{API}/me/stats", headers=h)

@@ -191,7 +191,7 @@ def test_07_cors_post_with_origin_succeeds():
 def sample_course(teacher_client):
     r = teacher_client.get(f"{API}/courses")
     assert r.status_code == 200, r.text
-    courses = r.json()
+    courses = r.json()["items"]
     match = [c for c in courses if c.get("title") == "Plantas Medicinales 101"]
     assert match, f"seed course 'Plantas Medicinales 101' missing. Got titles: {[c.get('title') for c in courses]}"
     return match[0]
@@ -272,7 +272,7 @@ def test_09_quiz_correct_index_hidden_then_revealed(teacher_client, student_clie
 def test_10_courses_listing_with_bearer(student_client):
     r = student_client.get(f"{API}/courses")
     assert r.status_code == 200
-    assert isinstance(r.json(), list)
+    assert isinstance(r.json()["items"], list)
 
 
 def test_11_my_courses_after_enroll(student_client):
@@ -292,7 +292,7 @@ def test_12_my_submissions(student_client):
 def test_13_leaderboard(student_client):
     r = student_client.get(f"{API}/leaderboard")
     assert r.status_code == 200
-    lb = r.json()
+    lb = r.json()["items"]
     assert isinstance(lb, list)
 
 

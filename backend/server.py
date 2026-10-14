@@ -180,6 +180,7 @@ async def startup():
     await db.courses.create_index("id", unique=True)
     await db.enrollments.create_index([("course_id", 1), ("student_id", 1)], unique=True)
     await db.user_badges.create_index([("user_id", 1), ("badge_id", 1)], unique=True)
+    await db["uploads.files"].create_index("metadata.id", unique=True)
 
     existing = await db.users.find_one({"email": settings.admin_email})
     if not existing:

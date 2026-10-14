@@ -1,6 +1,3 @@
-import io
-import base64
-
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 from fastapi.responses import StreamingResponse
 
@@ -38,9 +35,8 @@ async def get_file(
 ):
     user = await auth.get_current_user(request)
     f = await file_svc.get_authorized_file(file_id, user)
-    data = base64.b64decode(f["data_b64"])
     return StreamingResponse(
-        io.BytesIO(data),
+        await file_svc.stream_file(f),
         media_type=f["content_type"],
         headers={"Content-Disposition": f'inline; filename="{f["filename"]}"'},
     )
